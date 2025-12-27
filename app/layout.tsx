@@ -8,7 +8,6 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "EstACE V2.0",
-  description: "Sistema de Estacionamiento",
 };
 
 export default function RootLayout({
