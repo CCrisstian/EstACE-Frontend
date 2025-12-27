@@ -7,8 +7,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "EstACE V2.0",  // <--- AQUÍ ESTÁ EL CAMBIO
-  description: "Sistema de Estacionamiento Inteligente",
+  title: "EstACE V2.0",
+  description: "Sistema de Estacionamiento",
 };
 
 export default function RootLayout({
