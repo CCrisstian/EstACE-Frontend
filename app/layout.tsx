@@ -7,7 +7,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "EstACE V2.0",
+  title: "ACE V2.0",
 };
 
 export default function RootLayout({

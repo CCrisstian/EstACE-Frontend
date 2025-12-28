@@ -6,11 +6,14 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { loginUsuario } from "@/services/authService";
+import { IconEye, IconEyeOff } from "@tabler/icons-react";
+import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 
 export default function LoginPage() {
   const [legajo, setLegajo] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isVisible, setIsVisible] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -26,15 +29,19 @@ export default function LoginPage() {
       router.push("/dashboard");
     } catch (err) {
       setError("Legajo o contraseña incorrectos.");
-      // OJO: Si tienes error de CORS, este mensaje saldrá aunque la pass sea correcta.
     }
   };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-black p-4">
-      <div className="shadow-input mx-auto w-full max-w-md rounded-none bg-white p-4 md:rounded-2xl md:p-8 dark:bg-black border border-neutral-200 dark:border-neutral-800">
+      
+      <HoverBorderGradient
+        containerClassName="rounded-2xl p-2"
+        as="div" 
+        className="bg-white dark:bg-black w-full max-w-md p-4 md:p-8"
+      >
         <h2 className="text-xl font-bold text-neutral-800 dark:text-neutral-200">
-          Bienvenido a EstACE V2
+          Bienvenido a A.C.E. V2.0
         </h2>
         <p className="mt-2 max-w-sm text-sm text-neutral-600 dark:text-neutral-300">
           Ingresa tu legajo y contraseña para acceder al sistema.
@@ -46,7 +53,7 @@ export default function LoginPage() {
           </p>
         )}
 
-        <form className="my-8" onSubmit={handleSubmit}>
+        <form className="my-8 w-full" onSubmit={handleSubmit}>
           <LabelInputContainer className="mb-4">
             <Label htmlFor="legajo">Legajo</Label>
             <Input 
@@ -61,28 +68,42 @@ export default function LoginPage() {
           
           <LabelInputContainer className="mb-8">
             <Label htmlFor="password">Contraseña</Label>
-            <Input 
-              id="password" 
-              placeholder="••••••••" 
-              type="password" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                placeholder="••••••••"
+                type={isVisible ? "text" : "password"} 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="pr-10" 
+              />
+              
+              <button
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors"
+                type="button" 
+                onClick={() => setIsVisible(!isVisible)}
+              >
+                {isVisible ? (
+                  <IconEyeOff className="h-5 w-5" />
+                ) : (
+                  <IconEye className="h-5 w-5" />
+                )}
+              </button>
+            </div>
           </LabelInputContainer>
 
           <button
             className="group/btn relative block h-10 w-full rounded-md bg-gradient-to-br from-black to-neutral-600 font-medium text-white shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:bg-zinc-800 dark:from-zinc-900 dark:to-zinc-900 dark:shadow-[0px_1px_0px_0px_#27272a_inset,0px_-1px_0px_0px_#27272a_inset]"
             type="submit"
           >
-            Iniciar Sesión &rarr;
+            Iniciar Sesión
             <BottomGradient />
           </button>
 
-          {/* Separador decorativo */}
           <div className="my-8 h-[1px] w-full bg-gradient-to-r from-transparent via-neutral-300 to-transparent dark:via-neutral-700" />
         </form>
-      </div>
+      </HoverBorderGradient>
     </div>
   );
 }
