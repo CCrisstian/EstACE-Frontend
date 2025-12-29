@@ -3,15 +3,25 @@
 import React, { useEffect, useState } from "react";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import {
-  IconArrowLeft,
-  IconBrandTabler,
-  IconSettings,
-  IconUserBolt,
+  IconPower,
+  IconHome,
+  IconCar,
+  IconHistoryToggle,
+  IconUsersGroup,
+  IconParkingCircle,
+  IconCarGarage,
+  IconBusinessplan,
+  IconCashRegister,
+  IconFileInvoice,
+  IconReportAnalytics,
+  IconUser,
 } from "@tabler/icons-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { AuthResponse } from "@/types/auth.types";
+import Image from "next/image";
+import Link from "next/link";
 
 export default function DashboardPage() {
   const [user, setUser] = useState<AuthResponse | null>(null);
@@ -43,10 +53,81 @@ export default function DashboardPage() {
   // Definición de los links del menú
   const links = [
     {
-      label: "Dashboard",
+      label: "Inicio",
+      href: "/dashboard",
+      icon: (
+        <IconHome className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+    },
+    {
+      label: "Ingresos",
       href: "#",
       icon: (
-        <IconBrandTabler className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
+        <IconCar className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+      onClick: handlePending,
+    },
+    {
+      label: "Estacionamientos",
+      href: "#",
+      icon: (
+        <IconParkingCircle className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+      onClick: handlePending,
+    },
+    {
+      label: "Plazas",
+      href: "#",
+      icon: (
+        <IconCarGarage className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+      onClick: handlePending,
+    },
+    {
+      label: "Tarifas",
+      href: "#",
+      icon: (
+        <IconCashRegister className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+      onClick: handlePending,
+    },
+    {
+      label: "Métodos de Pago",
+      href: "#",
+      icon: (
+        <IconBusinessplan className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+      onClick: handlePending,
+    },
+    {
+      label: "Playeros",
+      href: "#",
+      icon: (
+        <IconUsersGroup className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+      onClick: handlePending,
+    },
+    {
+      label: "Turnos",
+      href: "#",
+      icon: (
+        <IconHistoryToggle className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+      onClick: handlePending,
+    },
+    {
+      label: "Abonados",
+      href: "#",
+      icon: (
+        <IconFileInvoice className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
+      ),
+      onClick: handlePending,
+    },
+    {
+      label: "Reportes",
+      href: "#",
+      icon: (
+        <IconReportAnalytics className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
       onClick: handlePending,
     },
@@ -54,15 +135,7 @@ export default function DashboardPage() {
       label: "Perfil",
       href: "#",
       icon: (
-        <IconUserBolt className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
-      ),
-      onClick: handlePending,
-    },
-    {
-      label: "Configuración",
-      href: "#",
-      icon: (
-        <IconSettings className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
+        <IconUser className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
       ),
       onClick: handlePending,
     },
@@ -70,9 +143,9 @@ export default function DashboardPage() {
       label: "Cerrar Sesión",
       href: "#",
       icon: (
-        <IconArrowLeft className="h-5 w-5 flex-shrink-0 text-red-500 dark:text-red-400" />
+        <IconPower className="h-5 w-5 flex-shrink-0 text-red-500 dark:text-red-400" />
       ),
-      onClick: handleLogout, // Este sí tiene función real
+      onClick: handleLogout,
     },
   ];
 
@@ -82,13 +155,12 @@ export default function DashboardPage() {
     <div
       className={cn(
         "rounded-md flex flex-col md:flex-row bg-gray-100 dark:bg-neutral-800 w-full flex-1 max-w-7xl mx-auto border border-neutral-200 dark:border-neutral-700 overflow-hidden",
-        "h-screen" // Pantalla completa como pediste
+        "h-screen"
       )}
     >
       <Sidebar open={open} setOpen={setOpen}>
         <SidebarBody className="justify-between gap-10">
-          <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
-            {open ? <Logo /> : <LogoIcon />}
+            <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden mt-8 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">            {open ? <Logo /> : <LogoIcon />}
             <div className="mt-8 flex flex-col gap-2">
               {links.map((link, idx) => (
                 // Usamos un div envolvente para capturar el onClick si es necesario
@@ -100,13 +172,12 @@ export default function DashboardPage() {
           </div>
           
           {/* Sección de Usuario Inferior */}
-          <div>
+          <div className="pointer-events-none cursor-default">
             <SidebarLink
               link={{
                 label: `${user.nombre} ${user.apellido}`,
-                href: "#",
+                href: "#", // Se mantiene para que el componente no se rompa, pero ya no funcionará
                 icon: (
-                  // Reemplazo de imagen por círculo Azul Claro
                   <div className="h-7 w-7 flex-shrink-0 rounded-full bg-blue-300 flex items-center justify-center text-xs font-bold text-white">
                     {user.nombre.charAt(0)}
                   </div>
@@ -137,8 +208,19 @@ export default function DashboardPage() {
 
 export const Logo = () => {
   return (
-    <div className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20">
-      <div className="h-5 w-6 bg-black dark:bg-white rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
+    <Link
+      href="/dashboard"
+      className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
+    >
+      <div className="h-8 w-8 relative overflow-hidden rounded-full flex-shrink-0">
+        <Image
+          src="/LogoACE_SinFondo.png"
+          alt="Logo EstACE"
+          fill
+          className="object-cover"
+          sizes="32px"
+        />
+      </div>
       <motion.span
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -146,14 +228,25 @@ export const Logo = () => {
       >
         EstACE V2
       </motion.span>
-    </div>
+    </Link>
   );
 };
 
 export const LogoIcon = () => {
   return (
-    <div className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20">
-      <div className="h-5 w-6 bg-black dark:bg-white rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
-    </div>
+    <Link
+      href="/dashboard"
+      className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
+    >
+      <div className="h-8 w-8 relative overflow-hidden rounded-full flex-shrink-0">
+        <Image
+          src="/LogoACE_SinFondo.png"
+          alt="Logo EstACE"
+          fill
+          className="object-cover"
+          sizes="32px"
+        />
+      </div>
+    </Link>
   );
 };
