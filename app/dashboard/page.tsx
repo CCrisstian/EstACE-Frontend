@@ -160,7 +160,8 @@ export default function DashboardPage() {
     >
       <Sidebar open={open} setOpen={setOpen}>
         <SidebarBody className="justify-between gap-10">
-            <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden mt-8">
+          <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+            {open ? <Logo /> : <LogoIcon />}
             <div className="mt-8 flex flex-col gap-2">
               {links.map((link, idx) => (
                 // Usamos un div envolvente para capturar el onClick si es necesario
@@ -172,12 +173,13 @@ export default function DashboardPage() {
           </div>
           
           {/* Sección de Usuario Inferior */}
-          <div className="pointer-events-none cursor-default">
+          <div>
             <SidebarLink
               link={{
                 label: `${user.nombre} ${user.apellido}`,
-                href: "#", // Se mantiene para que el componente no se rompa, pero ya no funcionará
+                href: "#",
                 icon: (
+                  // Reemplazo de imagen por círculo Azul Claro
                   <div className="h-7 w-7 flex-shrink-0 rounded-full bg-blue-300 flex items-center justify-center text-xs font-bold text-white">
                     {user.nombre.charAt(0)}
                   </div>
