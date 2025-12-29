@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
+// Iconos...
 import {
   IconPower,
   IconHome,
@@ -14,29 +15,46 @@ import {
   IconCashRegister,
   IconFileInvoice,
   IconReportAnalytics,
-  IconUser,
 } from "@tabler/icons-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import { AuthResponse } from "@/types/auth.types";
 import Image from "next/image";
 import Link from "next/link";
 
+import { UsuarioResponse } from "@/types/usuario.types";
+import { obtenerPerfil } from "@/services/userService";
+
 export default function DashboardPage() {
-  const [user, setUser] = useState<AuthResponse | null>(null);
+  // Usamos UsuarioResponse en el estado
+  const [user, setUser] = useState<UsuarioResponse | null>(null);
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("usuario");
 
-    if (!token || !storedUser) {
-      router.push("/login");
-    } else {
-      setUser(JSON.parse(storedUser));
+    // Si no hay token, fuera
+    if (!token) {
+      router.push("/");
+      return;
     }
+
+    // CONSULTAMOS A LA API
+    const fetchData = async () => {
+        try {
+            const data = await obtenerPerfil(token);
+            setUser(data);
+            
+            // Opcional: Actualizamos el localStorage por si otros componentes lo usan
+            localStorage.setItem("usuario", JSON.stringify(data));
+        } catch (error) {
+            console.error("Sesión expirada o inválida");
+            handleLogout(); // Si falla el token, cerramos sesión
+        }
+    };
+
+    fetchData();
   }, [router]);
 
   const handleLogout = () => {
@@ -158,13 +176,13 @@ export default function DashboardPage() {
           </div>
           
           {/* Sección de Usuario Inferior */}
-          {/* Agregamos pointer-events-none para bloquear clicks y cursor-default para quitar la manito */}
-          <div className="pointer-events-none cursor-default">
+          <div>
             <SidebarLink
               link={{
                 label: `${user.nombre} ${user.apellido}`,
-                href: "#", // Se mantiene para que el componente no se rompa, pero ya no funcionará
+                href: "/perfil",
                 icon: (
+                  // Reemplazo de imagen por círculo Azul Claro
                   <div className="h-7 w-7 flex-shrink-0 rounded-full bg-blue-300 flex items-center justify-center text-xs font-bold text-white">
                     {user.nombre.charAt(0)}
                   </div>
@@ -197,7 +215,7 @@ export const Logo = () => {
   return (
     <Link
       href="/dashboard"
-      className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
+      className="font-normal flex space-x-2 items-center text-sm text-black py-2 relative z-20"
     >
       <div className="h-8 w-8 relative overflow-hidden rounded-full flex-shrink-0">
         <Image
