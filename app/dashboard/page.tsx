@@ -146,8 +146,8 @@ export default function DashboardPage() {
     >
       <Sidebar open={open} setOpen={setOpen}>
         <SidebarBody className="justify-between gap-10">
-            <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden mt-8 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">            {open ? <Logo /> : <LogoIcon />}
-            <div className="mt-8 flex flex-col gap-2">
+            <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden mt-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">            {open ? <Logo /> : <LogoIcon />}
+            <div className="mt-4 flex flex-col gap-2">
               {links.map((link, idx) => (
                 // Usamos un div envolvente para capturar el onClick si es necesario
                 <div key={idx} onClick={link.onClick}>
