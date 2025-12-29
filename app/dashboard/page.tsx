@@ -52,6 +52,7 @@ export default function DashboardPage() {
 
   // Definición de los links del menú
   const links = [
+
     {
       label: "Ingresos",
       href: "#",
@@ -125,14 +126,6 @@ export default function DashboardPage() {
       onClick: handlePending,
     },
     {
-      label: "Perfil",
-      href: "#",
-      icon: (
-        <IconUser className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
-      ),
-      onClick: handlePending,
-    },
-    {
       label: "Cerrar Sesión",
       href: "#",
       icon: (
@@ -153,7 +146,7 @@ export default function DashboardPage() {
     >
       <Sidebar open={open} setOpen={setOpen}>
         <SidebarBody className="justify-between gap-10">
-            <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden mt-8 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden mt-8 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">            {open ? <Logo /> : <LogoIcon />}
             <div className="mt-8 flex flex-col gap-2">
               {links.map((link, idx) => (
                 // Usamos un div envolvente para capturar el onClick si es necesario
@@ -165,6 +158,7 @@ export default function DashboardPage() {
           </div>
           
           {/* Sección de Usuario Inferior */}
+          {/* Agregamos pointer-events-none para bloquear clicks y cursor-default para quitar la manito */}
           <div className="pointer-events-none cursor-default">
             <SidebarLink
               link={{
@@ -198,3 +192,48 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+export const Logo = () => {
+  return (
+    <Link
+      href="/dashboard"
+      className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
+    >
+      <div className="h-8 w-8 relative overflow-hidden rounded-full flex-shrink-0">
+        <Image
+          src="/LogoACE_SinFondo.png"
+          alt="Logo EstACE"
+          fill
+          className="object-cover"
+          sizes="32px"
+        />
+      </div>
+      <motion.span
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="font-medium text-black dark:text-white whitespace-pre"
+      >
+        EstACE V2
+      </motion.span>
+    </Link>
+  );
+};
+
+export const LogoIcon = () => {
+  return (
+    <Link
+      href="/dashboard"
+      className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
+    >
+      <div className="h-8 w-8 relative overflow-hidden rounded-full flex-shrink-0">
+        <Image
+          src="/LogoACE_SinFondo.png"
+          alt="Logo EstACE"
+          fill
+          className="object-cover"
+          sizes="32px"
+        />
+      </div>
+    </Link>
+  );
+};
