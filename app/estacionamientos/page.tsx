@@ -94,7 +94,7 @@ export default function EstacionamientosListPage() {
                   <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#4ADE80_0%,#16A34A_50%,#4ADE80_100%)]" />
                   <span className="inline-flex h-full w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-6 py-1 text-sm font-medium text-green-400 backdrop-blur-3xl hover:bg-slate-900 transition-colors">
                     <IconPlus size={25} />
-                    Agregar Nuevo
+                    Agregar Estacionamiento
                   </span>
                 </button>
               </Link>
