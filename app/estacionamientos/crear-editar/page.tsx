@@ -262,7 +262,7 @@ function CrearEditarContent() {
         // Redirección automática después de 2 segundos
         setTimeout(() => {
             router.push("/estacionamientos");
-        }, 10000);
+        }, 5000);
 
     } catch (error: any) {
         setAlerta({ type: 'error', text: error.message || "Ocurrió un error al guardar." });
