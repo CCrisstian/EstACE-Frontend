@@ -154,7 +154,7 @@ export default function EstacionamientosListPage() {
                             </div>
                             <p className="text-lg font-medium">No se encontraron estacionamientos</p>
                             <p className="text-sm opacity-70">
-                                {searchTerm ? "Intenta con otra búsqueda." : "Aún no has registrado ninguna playa."}
+                                {searchTerm ? "Intenta con otra búsqueda." : "Aún no has registrado ningún Estacionamiento."}
                             </p>
                           </div>
                         </td>
