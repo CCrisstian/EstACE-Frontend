@@ -28,6 +28,8 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { obtenerMisEstacionamientos } from "@/services/estacionamientoService";
 import { Estacionamiento } from "@/types/estacionamiento.types";
 
+import RoleGuard from "@/components/RoleGuard";
+
 export default function EstacionamientosListPage() {
   const router = useRouter();
 
@@ -70,6 +72,7 @@ export default function EstacionamientosListPage() {
   );
 
   return (
+    <RoleGuard allowedRoles={["Dueño"]}>
     <AppSidebar>
       <div className="flex-1 w-full h-full overflow-hidden bg-white dark:bg-neutral-900">
         <div className="w-full h-full overflow-y-auto p-4 md:p-10">
@@ -318,5 +321,6 @@ export default function EstacionamientosListPage() {
 
       </div>
     </AppSidebar>
+  </RoleGuard>
   );
 }

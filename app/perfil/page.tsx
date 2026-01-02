@@ -265,7 +265,7 @@ export default function PerfilPage() {
                     <button type="button" onClick={handleConfirmUpdate} className="relative inline-flex h-12 w-full overflow-hidden rounded-full p-[6px] focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-50 group">
                         <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#60A5FA_0%,#2563EB_50%,#60A5FA_100%)]" />
                         <span className="inline-flex h-full w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-slate-950 px-6 py-1 text-sm font-medium text-blue-400 backdrop-blur-3xl group-hover:bg-slate-900 transition-colors">
-                            <IconDeviceFloppy size={25} /> Aceptar
+                            <IconCheck size={25} /> Confirmar
                         </span>
                     </button>
                     {/* Botón Cancelar */}

@@ -34,6 +34,8 @@ import {
   obtenerEstacionamientoPorId 
 } from "@/services/estacionamientoService";
 
+import RoleGuard from "@/components/RoleGuard";
+
 // Importación Dinámica del Mapa
 const MapaSelector = dynamic(
   () => import("@/components/MapaSelector").then((mod) => mod.default),
@@ -290,6 +292,7 @@ function CrearEditarContent() {
   }
 
   return (
+    <RoleGuard allowedRoles={["Dueño"]}>
     <AppSidebar>
       <div className="flex-1 w-full h-full overflow-hidden bg-white dark:bg-neutral-900">
         <div className="w-full h-full overflow-y-auto p-4 md:p-8 relative">
@@ -477,7 +480,7 @@ function CrearEditarContent() {
                             </button>
                         </div>
                     </div>
-                    {/* --- AQUÍ ESTÁ EL BLOQUE DE ALERTAS VISUALES --- */}
+                    {/* --- BLOQUE DE ALERTAS VISUALES --- */}
                     <AnimatePresence mode="wait">
                         {alerta && (
                             <motion.div
@@ -562,6 +565,7 @@ function CrearEditarContent() {
       )}
 
     </AppSidebar>
+    </RoleGuard>
   );
 }
 

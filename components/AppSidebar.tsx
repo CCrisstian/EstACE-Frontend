@@ -64,7 +64,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [usuario, setUsuario] = useState<UsuarioResponse | null>(null);
 
-  // Cargar usuario para el avatar del sidebar
+  // Cargar usuario para el avatar y PERMISOS del sidebar
   useEffect(() => {
     const initData = async () => {
       const token = localStorage.getItem("token");
@@ -91,7 +91,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
     alert("Funcionalidad próximamente disponible");
   };
 
-  // Definición de Links
+  // Definición de Links (TODOS)
   const links = [
     {
       label: "Ingresos",
@@ -103,7 +103,6 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
       label: "Estacionamientos",
       href: "/estacionamientos",
       icon: <IconParkingCircle className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />,
-      // Sin onClick para que navegue
     },
     {
       label: "Plazas",
@@ -125,9 +124,8 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
     },
     {
       label: "Playeros",
-      href: "#",
+      href: "/playeros",
       icon: <IconUsersGroup className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />,
-      onClick: handlePending,
     },
     {
       label: "Turnos",
@@ -155,11 +153,26 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
     },
   ];
 
+  // --- FILTRADO DE LINKS SEGÚN ROL ---
+  const filteredLinks = links.filter((link) => {
+    // Si el usuario no ha cargado aún, mostramos todo (o podrías mostrar solo lo básico)
+    if (!usuario) return true;
+
+    // Si es PLAYERO, ocultamos las opciones restringidas
+    if (usuario.tipo === "Playero") {
+      const opcionesProhibidas = ["Estacionamientos", "Playeros", "Reportes"];
+      return !opcionesProhibidas.includes(link.label);
+    }
+
+    // Si es Dueño, ve todo
+    return true;
+  });
+
   return (
     <div
       className={cn(
         "rounded-md flex flex-col md:flex-row bg-gray-100 dark:bg-neutral-800 w-full flex-1 mx-auto border border-neutral-200 dark:border-neutral-700 overflow-hidden",
-        "h-screen" // Asegura altura completa
+        "h-screen" 
       )}
     >
       <Sidebar open={open} setOpen={setOpen}>
@@ -167,11 +180,14 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
           <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden mt-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {open ? <Logo /> : <LogoIcon />}
             <div className="mt-4 flex flex-col gap-2">
-              {links.map((link, idx) => (
+              
+              {/* Iteramos sobre filteredLinks en lugar de links */}
+              {filteredLinks.map((link, idx) => (
                 <div key={idx} onClick={link.onClick}>
                   <SidebarLink link={link} />
                 </div>
               ))}
+
             </div>
           </div>
 
@@ -192,7 +208,6 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
         </SidebarBody>
       </Sidebar>
 
-      {/* Aquí se renderiza el contenido específico de cada página */}
       <div className="flex-1 flex flex-col overflow-hidden">
          {children}
       </div>
