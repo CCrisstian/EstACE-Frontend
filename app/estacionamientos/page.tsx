@@ -82,7 +82,7 @@ export default function EstacionamientosListPage() {
                   Mis Estacionamientos
                 </h2>
                 <p className="text-gray-500 dark:text-gray-400 mt-1">
-                  Gestiona y visualiza tus playas registradas.
+                  Gestiona y visualiza tus Estacionamientos registrados.
                 </p>
               </div>
 
