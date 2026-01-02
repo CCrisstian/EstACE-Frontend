@@ -301,7 +301,7 @@ function CrearEditarContent() {
                         {idToEdit ? "Editar Estacionamiento" : "Nuevo Estacionamiento"}
                     </h2>
                     <p className="text-gray-500 dark:text-gray-400 mt-1">
-                        {idToEdit ? "Modifica los datos de tu playa." : "Completa la información para registrar una nueva playa."}
+                        {idToEdit ? "Modifica los datos de tu Estacionamiento." : "Completa la información para registrar un nuevo Estacionamiento."}
                     </p>
                 </div>
 
