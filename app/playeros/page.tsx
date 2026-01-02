@@ -87,7 +87,7 @@ export default function PlayerosListPage() {
                         <th className="px-6 py-4">Playero</th>
                         <th className="px-6 py-4">Legajo</th>
                         <th className="px-6 py-4">DNI</th>
-                        <th className="px-6 py-4">Sucursal</th>
+                        <th className="px-6 py-4">Estacionamiento</th>
                         <th className="px-6 py-4 text-center">Estado</th>
                         <th className="px-6 py-4 text-right">Acciones</th>
                       </tr>
