@@ -86,18 +86,21 @@ export default function EstacionamientosListPage() {
                 </p>
               </div>
 
-              <Link href="/estacionamientos/crear-editar">
-                <button
-                  type="button"
-                  className="relative inline-flex h-12 overflow-hidden rounded-full p-1.5 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-slate-50 shadow-lg transition-transform hover:scale-105 active:scale-95"
-                >
-                  <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#4ADE80_0%,#16A34A_50%,#4ADE80_100%)]" />
-                  <span className="inline-flex h-full w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-6 py-1 text-sm font-medium text-green-400 backdrop-blur-3xl hover:bg-slate-900 transition-colors">
-                    <IconPlus size={25} />
-                    Agregar Estacionamiento
-                  </span>
-                </button>
-              </Link>
+              {/* Solo mostramos el botón si NO tiene estacionamientos */}
+              {estacionamientos.length === 0 && (
+                <Link href="/estacionamientos/crear-editar">
+                  <button
+                    type="button"
+                    className="relative inline-flex h-12 overflow-hidden rounded-full p-1.5 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-slate-50 shadow-lg transition-transform hover:scale-105 active:scale-95"
+                  >
+                    <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#4ADE80_0%,#16A34A_50%,#4ADE80_100%)]" />
+                    <span className="inline-flex h-full w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-6 py-1 text-sm font-medium text-green-400 backdrop-blur-3xl hover:bg-slate-900 transition-colors">
+                      <IconPlus size={25} />
+                      Agregar Nuevo
+                    </span>
+                  </button>
+                </Link>
+              )}
             </div>
 
             {/* TABLA Y BUSCADOR */}
