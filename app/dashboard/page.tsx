@@ -1,256 +1,67 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
-// Iconos...
-import {
-  IconPower,
-  IconHome,
-  IconCar,
-  IconHistoryToggle,
-  IconUsersGroup,
-  IconParkingCircle,
-  IconCarGarage,
-  IconBusinessplan,
-  IconCashRegister,
-  IconFileInvoice,
-  IconReportAnalytics,
-} from "@tabler/icons-react";
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import Link from "next/link";
 
+// Importamos el Wrapper del Sidebar
+import { AppSidebar } from "@/components/AppSidebar";
+
+// Servicios y Tipos
 import { UsuarioResponse } from "@/types/usuario.types";
 import { obtenerPerfil } from "@/services/userService";
 
 export default function DashboardPage() {
-  // Usamos UsuarioResponse en el estado
+  // Mantenemos el estado del usuario localmente para mostrar la bienvenida
   const [user, setUser] = useState<UsuarioResponse | null>(null);
-  const [open, setOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-    // Si no hay token, fuera
     if (!token) {
       router.push("/");
       return;
     }
 
-    // CONSULTAMOS A LA API
     const fetchData = async () => {
         try {
             const data = await obtenerPerfil(token);
             setUser(data);
-            
-            // Opcional: Actualizamos el localStorage por si otros componentes lo usan
+            // Actualizamos localStorage para consistencia
             localStorage.setItem("usuario", JSON.stringify(data));
         } catch (error) {
-            console.error("Sesión expirada o inválida");
-            handleLogout(); // Si falla el token, cerramos sesión
+            console.error("Error obteniendo perfil:", error);
+            // Si falla el token (expirado), mandamos al login
+            localStorage.removeItem("token");
+            router.push("/");
         }
     };
 
     fetchData();
   }, [router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("usuario");
-    router.push("/");
-  };
-
-  const handlePending = (e: React.MouseEvent) => {
-    e.preventDefault();
-    alert("Función pendiente");
-  };
-
-  // Definición de los links del menú
-  const links = [
-
-    {
-      label: "Ingresos",
-      href: "#",
-      icon: (
-        <IconCar className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
-      ),
-      onClick: handlePending,
-    },
-    {
-      label: "Estacionamientos",
-      href: "/estacionamientos",
-      icon: (
-        <IconParkingCircle className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
-      )    
-    },
-    {
-      label: "Plazas",
-      href: "#",
-      icon: (
-        <IconCarGarage className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
-      ),
-      onClick: handlePending,
-    },
-    {
-      label: "Tarifas",
-      href: "#",
-      icon: (
-        <IconCashRegister className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
-      ),
-      onClick: handlePending,
-    },
-    {
-      label: "Métodos de Pago",
-      href: "#",
-      icon: (
-        <IconBusinessplan className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
-      ),
-      onClick: handlePending,
-    },
-    {
-      label: "Playeros",
-      href: "#",
-      icon: (
-        <IconUsersGroup className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
-      ),
-      onClick: handlePending,
-    },
-    {
-      label: "Turnos",
-      href: "#",
-      icon: (
-        <IconHistoryToggle className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
-      ),
-      onClick: handlePending,
-    },
-    {
-      label: "Abonados",
-      href: "#",
-      icon: (
-        <IconFileInvoice className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
-      ),
-      onClick: handlePending,
-    },
-    {
-      label: "Reportes",
-      href: "#",
-      icon: (
-        <IconReportAnalytics className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
-      ),
-      onClick: handlePending,
-    },
-    {
-      label: "Cerrar Sesión",
-      href: "#",
-      icon: (
-        <IconPower className="h-5 w-5 flex-shrink-0 text-red-500 dark:text-red-400" />
-      ),
-      onClick: handleLogout,
-    },
-  ];
-
-  if (!user) return null; // O un spinner de carga
+  // Mientras carga el usuario, no mostramos nada
+  if (!user) return null;
 
   return (
-    <div
-      className={cn(
-        "rounded-md flex flex-col md:flex-row bg-gray-100 dark:bg-neutral-800 w-full flex-1 max-w-7xl mx-auto border border-neutral-200 dark:border-neutral-700 overflow-hidden",
-        "h-screen"
-      )}
-    >
-      <Sidebar open={open} setOpen={setOpen}>
-        <SidebarBody className="justify-between gap-10">
-            <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden mt-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">            {open ? <Logo /> : <LogoIcon />}
-            <div className="mt-4 flex flex-col gap-2">
-              {links.map((link, idx) => (
-                // Usamos un div envolvente para capturar el onClick si es necesario
-                <div key={idx} onClick={link.onClick}>
-                   <SidebarLink link={link} />
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          {/* Sección de Usuario Inferior */}
-          <div>
-            <SidebarLink
-              link={{
-                label: `${user.nombre} ${user.apellido}`,
-                href: "/perfil",
-                icon: (
-                  // Reemplazo de imagen por círculo Azul Claro
-                  <div className="h-7 w-7 flex-shrink-0 rounded-full bg-blue-300 flex items-center justify-center text-xs font-bold text-white">
-                    {user.nombre.charAt(0)}
-                  </div>
-                ),
-              }}
-            />
-          </div>
-        </SidebarBody>
-      </Sidebar>
-      
-      {/* Contenido Principal del Dashboard */}
-      <div className="flex flex-1">
+    // Envolvemos el contenido específico del Dashboard con el Sidebar reutilizable
+    <AppSidebar>
         <div className="p-2 md:p-10 rounded-tl-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 flex flex-col gap-2 flex-1 w-full h-full">
+            
             <h2 className="text-3xl font-bold text-neutral-800 dark:text-neutral-200">
                 Bienvenido, {user.nombre}
             </h2>
-            <div className="mt-4 p-4 border border-dashed border-neutral-300 rounded-lg">
-                <div className="mt-4">
+            
+            <div className="mt-4 p-4 border border-dashed border-neutral-300 rounded-lg bg-gray-50 dark:bg-neutral-800">
+                <h3 className="text-lg font-semibold mb-2 text-neutral-800 dark:text-neutral-200">Tus Datos</h3>
+                <div className="space-y-1 text-neutral-800 dark:text-neutral-200">
                     <p><strong>Legajo:</strong> {user.legajo}</p>
                     <p><strong>Rol:</strong> {user.tipo}</p>
+                    <p><strong>Nombre completo:</strong> {user.nombre} {user.apellido}</p>
+                    <p><strong>DNI:</strong> {user.dni}</p>
                 </div>
-            </div>
+            </div>            
         </div>
-      </div>
-    </div>
+    </AppSidebar>
   );
 }
-
-export const Logo = () => {
-  return (
-    <Link
-      href="/dashboard"
-      className="font-normal flex space-x-2 items-center text-sm text-black py-2 relative z-20"
-    >
-      <div className="h-8 w-8 relative overflow-hidden rounded-full flex-shrink-0">
-        <Image
-          src="/LogoACE_SinFondo.png"
-          alt="Logo EstACE"
-          fill
-          className="object-cover"
-          sizes="32px"
-        />
-      </div>
-      <motion.span
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="font-medium text-black dark:text-white whitespace-pre"
-      >
-        EstACE V2
-      </motion.span>
-    </Link>
-  );
-};
-
-export const LogoIcon = () => {
-  return (
-    <Link
-      href="/dashboard"
-      className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20"
-    >
-      <div className="h-8 w-8 relative overflow-hidden rounded-full flex-shrink-0">
-        <Image
-          src="/LogoACE_SinFondo.png"
-          alt="Logo EstACE"
-          fill
-          className="object-cover"
-          sizes="32px"
-        />
-      </div>
-    </Link>
-  );
-};

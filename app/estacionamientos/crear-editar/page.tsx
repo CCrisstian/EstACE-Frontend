@@ -1,22 +1,38 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
-import Link from "next/link";
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { useRouter, useSearchParams } from "next/navigation";
 
-// Componentes UI
-import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
-import { IconChevronLeft, IconMapPin, IconClock, IconCalendar, IconDeviceFloppy, IconLoader2, IconMap2, IconX, IconAlertTriangle } from "@tabler/icons-react";
+// 1. Importamos el Wrapper del Sidebar
+import { AppSidebar } from "@/components/AppSidebar";
+
+// 2. Importamos los iconos necesarios
+import { 
+  IconMapPin, 
+  IconClock, 
+  IconCalendar, 
+  IconDeviceFloppy, 
+  IconMap2, 
+  IconLoader2, 
+  IconX,
+  IconAlertTriangle,
+  IconCheck,       
+  IconInfoCircle   
+} from "@tabler/icons-react";
+
+// 3. Importamos Framer Motion para las animaciones de la alerta
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 // Servicios
 import { obtenerProvincias, obtenerLocalidades } from "@/services/georef";
 import { obtenerCoordenadas, obtenerDireccionDesdeCoordenadas } from "@/services/geocoding";
-import { obtenerPerfil } from "@/services/userService"; 
-import { UsuarioResponse } from "@/types/usuario.types";
+import { 
+  crearEstacionamiento, 
+  editarEstacionamiento, 
+  obtenerEstacionamientoPorId 
+} from "@/services/estacionamientoService";
 
 // Importación Dinámica del Mapa
 const MapaSelector = dynamic(
@@ -35,16 +51,19 @@ const MapaSelector = dynamic(
 const HORAS = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
 const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
-export default function CrearEstacionamientoPage() {
+function CrearEditarContent() {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const idToEdit = searchParams.get("id"); 
   
-  // Modal de confirmación
-  const [showModal, setShowModal] = useState(false);
-
-  // Estados de carga y usuario
-  const [usuario, setUsuario] = useState<UsuarioResponse | null>(null);
+  // Estados de carga
   const [loadingMap, setLoadingMap] = useState(false);
+  const [saving, setSaving] = useState(false); 
+  const [loadingData, setLoadingData] = useState(false);
+  
+  // --- ESTADOS DE UI: ALERTAS Y MODAL ---
+  const [alerta, setAlerta] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [showModal, setShowModal] = useState(false);
   
   // Datos Geográficos
   const [provincias, setProvincias] = useState<{ id: string; nombre: string }[]>([]);
@@ -58,38 +77,74 @@ export default function CrearEstacionamientoPage() {
     direccion: '',
     latitud: null as number | null,
     longitud: null as number | null,
-    
-    // Horarios
     diaInicio: 'Lunes',
     diaFin: 'Viernes',
-    horaInicio: '08:00',
-    horaFin: '20:00',
-    
-    // Finde
+    horaInicio: '00:00',
+    horaFin: '00:00',
     atiendeFinde: false,
-    horaFindeInicio: '09:00',
-    horaFindeFin: '13:00',
-    
-    // Extras
+    horaFindeInicio: '00:00',
+    horaFindeFin: '00:00',
     atiendeFeriados: false,
     disponible: true
   });
 
   // --- EFECTOS ---
+
   useEffect(() => {
     const initData = async () => {
         const token = localStorage.getItem("token");
-        if (token) {
-            try {
-                const userData = await obtenerPerfil(token);
-                setUsuario(userData);
-            } catch (e) { console.error(e); }
+        if (!token) {
+           router.push("/");
+           return;
         }
-        const provData = await obtenerProvincias();
-        setProvincias(provData);
+
+        try {
+            const provData = await obtenerProvincias();
+            setProvincias(provData);
+
+            if (idToEdit) {
+                setLoadingData(true);
+                const est = await obtenerEstacionamientoPorId(Number(idToEdit), token);
+                
+                const [dInicio, dFin] = est.diasAtencion ? est.diasAtencion.split(" a ") : ["Lunes", "Viernes"];
+                const [hInicio, hFin] = est.hraAtencion ? est.hraAtencion.split(" - ") : ["00:00", "00:00"];
+                
+                let hFindeInicio = "00:00";
+                let hFindeFin = "00:00";
+                if (est.horaFinDeSemana) {
+                   const splitFinde = est.horaFinDeSemana.split(" - ");
+                   if (splitFinde.length === 2) {
+                       hFindeInicio = splitFinde[0];
+                       hFindeFin = splitFinde[1];
+                   }
+                }
+
+                setForm({
+                    nombre: est.nombre,
+                    provincia: est.provincia,
+                    localidad: est.localidad,
+                    direccion: est.direccion,
+                    latitud: est.latitud,
+                    longitud: est.longitud,
+                    diaInicio: dInicio,
+                    diaFin: dFin,
+                    horaInicio: hInicio,
+                    horaFin: hFin,
+                    atiendeFinde: est.finDeSemanaAtencion,
+                    horaFindeInicio: hFindeInicio,
+                    horaFindeFin: hFindeFin,
+                    atiendeFeriados: est.diasFeriadoAtencion,
+                    disponible: est.disponibilidad
+                });
+                setLoadingData(false);
+            }
+        } catch (e) { 
+            console.error(e); 
+            setAlerta({ type: 'error', text: "Error cargando datos iniciales." });
+        }
     };
     initData();
-  }, []);
+  }, [idToEdit, router]);
 
   useEffect(() => {
     async function loadLocalidades() {
@@ -113,101 +168,105 @@ export default function CrearEstacionamientoPage() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+    // Limpiamos la alerta al corregir
+    if (alerta) setAlerta(null); 
   };
 
   const handleBuscarUbicacion = async () => {
     if (!form.direccion || !form.localidad || !form.provincia) {
-      alert("Completa la dirección, localidad y provincia.");
+      setAlerta({ type: 'error', text: "Completa la dirección, localidad y provincia para buscar." });
       return;
     }
     setLoadingMap(true);
-    const coords = await obtenerCoordenadas(form.direccion, form.localidad, form.provincia);
-    setLoadingMap(false);
-
-    if (coords.lat && coords.lon) {
-      setForm(prev => ({ ...prev, latitud: coords.lat, longitud: coords.lon }));
-    } else {
-      alert("No se encontró la ubicación. Intenta ajustar el texto o usa el mapa.");
+    setAlerta(null);
+    try {
+        const coords = await obtenerCoordenadas(form.direccion, form.localidad, form.provincia);
+        if (coords.lat && coords.lon) {
+            setForm(prev => ({ ...prev, latitud: coords.lat, longitud: coords.lon }));
+        } else {
+            setAlerta({ type: 'error', text: "No se encontró la ubicación. Intenta ajustar el texto o usa el mapa." });
+        }
+    } catch {
+        setAlerta({ type: 'error', text: "Error al conectar con el servicio de mapas." });
+    } finally {
+        setLoadingMap(false);
     }
   };
 
   const handleCoordenadasChange = async (lat: number, lon: number) => {
     setForm(prev => ({ ...prev, latitud: lat, longitud: lon }));
-    
     const data = await obtenerDireccionDesdeCoordenadas(lat, lon);
-    
     if (data) {
-       const direccionCompleta = data.altura 
-            ? `${data.calle} ${data.altura}` 
-            : data.calle;
-
-       setForm(prev => ({
-          ...prev,
-          direccion: direccionCompleta || prev.direccion, 
-       }));
+       const direccionCompleta = data.altura ? `${data.calle} ${data.altura}` : data.calle;
+       setForm(prev => ({ ...prev, direccion: direccionCompleta || prev.direccion }));
     }
   };
 
-  // PASO 1: Validación inicial (al hacer click en "Guardar")
+  // PASO 1: Validaciones (Abre el Modal)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     // Validaciones
     if (!form.nombre || !form.provincia || !form.localidad || !form.direccion) {
-        alert("Por favor completa todos los campos obligatorios.");
+        setAlerta({ type: 'error', text: "Por favor, completa todos los campos obligatorios de ubicación." });
         return;
     }
-
     if (!form.latitud || !form.longitud) {
-        alert("Debes validar la dirección usando el botón del mapa o seleccionando una ubicación.");
+        setAlerta({ type: 'error', text: "Es necesario validar la ubicación en el mapa." });
         return;
     }
-
     if (form.horaInicio >= form.horaFin) {
-        alert("El horario de apertura debe ser anterior al de cierre.");
+        setAlerta({ type: 'error', text: "El horario de apertura debe ser anterior al de cierre." });
         return;
     }
 
-    if (form.atiendeFinde) {
-        if (form.horaFindeInicio >= form.horaFindeFin) {
-            alert("El horario de fin de semana (apertura) debe ser anterior al de cierre.");
-            return;
-        }
-    }
-
-    // SI PASA LAS VALIDACIONES, MOSTRAMOS EL MODAL
+    // Si todo OK, limpiamos alertas y mostramos modal
+    setAlerta(null);
     setShowModal(true);
   };
 
-  // PASO 2: Confirmación real (dentro del modal)
+  // PASO 2: Confirmación y Guardado (API)
   const handleConfirmSave = async () => {
-    // Cerrar modal
     setShowModal(false);
-
-    const datosParaBackend = {
-        est_nombre: form.nombre,
-        est_provincia: form.provincia,
-        est_localidad: form.localidad,
-        est_direccion: form.direccion,
-        est_latitud: form.latitud,
-        est_longitud: form.longitud,
-        est_dias_atencion: `${form.diaInicio} a ${form.diaFin}`,
-        est_hra_atencion: `${form.horaInicio} - ${form.horaFin}`,
-        est_fin_de_semana_atencion: form.atiendeFinde,
-        est_hora_fin_de_semana: form.atiendeFinde ? `${form.horaFindeInicio} - ${form.horaFindeFin}` : null,
-        est_dias_feriado_atencion: form.atiendeFeriados,
-        est_disponibilidad: form.disponible
-    };
+    setSaving(true);
 
     try {
-        console.log("Enviando datos confirmados:", datosParaBackend);
-        // Aquí iría tu fetch real
-        alert("¡Estacionamiento creado con éxito!");
-        router.push("/estacionamientos");
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("No hay sesión activa");
 
-    } catch (error) {
-        console.error(error);
-        alert("Ocurrió un error al guardar.");
+        const datosParaBackend = {
+            nombre: form.nombre,
+            provincia: form.provincia,
+            localidad: form.localidad,
+            direccion: form.direccion,
+            latitud: form.latitud,
+            longitud: form.longitud,
+            diasAtencion: `${form.diaInicio} a ${form.diaFin}`,
+            hraAtencion: `${form.horaInicio} - ${form.horaFin}`,
+            finDeSemanaAtencion: form.atiendeFinde,
+            horaFinDeSemana: form.atiendeFinde ? `${form.horaFindeInicio} - ${form.horaFindeFin}` : null,
+            diasFeriadoAtencion: form.atiendeFeriados,
+            disponibilidad: form.disponible
+        };
+
+        if (idToEdit) {
+            await editarEstacionamiento(Number(idToEdit), datosParaBackend, token);
+            // Mensaje Personalizado EDICIÓN
+            setAlerta({ type: 'success', text: "¡Cambios guardados! Tu Estacionamiento ha sido Actualizado correctamente." });
+        } else {
+            await crearEstacionamiento(datosParaBackend, token);
+            // Mensaje Personalizado CREACIÓN
+            setAlerta({ type: 'success', text: "¡Éxito! Se ha registrado el Nuevo Estacionamiento." });
+        }
+
+        // Redirección automática después de 2 segundos
+        setTimeout(() => {
+            router.push("/estacionamientos");
+        }, 2000);
+
+    } catch (error: any) {
+        setAlerta({ type: 'error', text: error.message || "Ocurrió un error al guardar." });
+        setSaving(false); 
     }
   };
 
@@ -215,56 +274,35 @@ export default function CrearEstacionamientoPage() {
     router.push("/estacionamientos");
   };
 
-  // --- UI COMPONENTS ---
+  // --- STYLES ---
   const InputStyle = "w-full rounded-lg border shadow-sm p-3 transition-colors border-gray-300 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 text-gray-600 dark:text-gray-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none";
   const LabelStyle = "block text-sm font-medium text-gray-700 dark:text-neutral-400 mb-1";
 
-  const links = [
-    { label: "Volver", href: "/estacionamientos", icon: <IconChevronLeft className="h-5 w-5 text-neutral-700 dark:text-neutral-200" /> },
-  ];
+  if (loadingData) {
+      return (
+        <div className="flex h-screen w-full items-center justify-center bg-gray-100 dark:bg-neutral-900">
+            <div className="flex flex-col items-center gap-2">
+                <IconLoader2 className="h-10 w-10 animate-spin text-blue-600" />
+                <p className="text-gray-500">Cargando datos del estacionamiento...</p>
+            </div>
+        </div>
+      );
+  }
 
   return (
-    <div className={cn(
-        "flex flex-col md:flex-row bg-gray-100 dark:bg-neutral-900 w-full flex-1 mx-auto border border-neutral-200 dark:border-neutral-700 overflow-hidden",
-        "h-screen"
-      )}>
-      
-      {/* SIDEBAR */}
-      <Sidebar open={open} setOpen={setOpen}>
-        <SidebarBody className="justify-between gap-10">
-          <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden mt-2">
-            {open ? <Logo /> : <LogoIcon />}
-            <div className="mt-4 flex flex-col gap-2">
-              {links.map((link, idx) => (
-                <div key={idx}><SidebarLink link={link} /></div>
-              ))}
-            </div>
-          </div>
-          <div>
-            <SidebarLink
-              link={{
-                label: usuario ? `${usuario.nombre} ${usuario.apellido}` : "Usuario",
-                href: "/perfil",
-                icon: (
-                  <div className="h-7 w-7 flex-shrink-0 rounded-full bg-blue-300 flex items-center justify-center text-xs font-bold text-white">
-                    {usuario?.nombre?.charAt(0) || "U"}
-                  </div>
-                ),
-              }}
-            />
-          </div>
-        </SidebarBody>
-      </Sidebar>
-
-      {/* CONTENIDO PRINCIPAL */}
+    <AppSidebar>
       <div className="flex-1 w-full h-full overflow-hidden bg-white dark:bg-neutral-900">
         <div className="w-full h-full overflow-y-auto p-4 md:p-8 relative">
             
             <div className="max-w-5xl mx-auto mt-6 pb-20">
                 
                 <div className="mb-8">
-                    <h2 className="text-3xl font-bold text-gray-800 dark:text-white">Nuevo Estacionamiento</h2>
-                    <p className="text-gray-500 dark:text-gray-400 mt-1">Completa la información para registrar una nueva playa.</p>
+                    <h2 className="text-3xl font-bold text-gray-800 dark:text-white">
+                        {idToEdit ? "Editar Estacionamiento" : "Nuevo Estacionamiento"}
+                    </h2>
+                    <p className="text-gray-500 dark:text-gray-400 mt-1">
+                        {idToEdit ? "Modifica los datos de tu playa." : "Completa la información para registrar una nueva playa."}
+                    </p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-8">
@@ -393,7 +431,7 @@ export default function CrearEstacionamientoPage() {
                         </div>
                     </div>
 
-                    {/* SECCIÓN 3: EXTRAS Y BOTÓN DE GUARDAR */}
+                    {/* SECCIÓN 3: EXTRAS Y BOTONES */}
                     <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-6">
                         <div className="flex gap-6">
                             <label className="flex items-center gap-3 cursor-pointer group">
@@ -413,15 +451,17 @@ export default function CrearEstacionamientoPage() {
                             </label>
                         </div>
 
-                        {/* BOTÓN GUARDAR DEL FORMULARIO PRINCIPAL */}
+                        {/* BOTONES */}
                         <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
                             <button 
-                                type="submit" 
-                                className="relative inline-flex h-12 w-full md:w-auto overflow-hidden rounded-full p-[6px] focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-50"
+                                type="submit"
+                                disabled={saving}
+                                className="relative inline-flex h-12 w-full md:w-auto overflow-hidden rounded-full p-[6px] focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-50 disabled:opacity-70 disabled:cursor-not-allowed"
                             >
                                 <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#60A5FA_0%,#2563EB_50%,#60A5FA_100%)]" />
                                 <span className="inline-flex h-full w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-slate-950 px-6 py-1 text-sm font-medium text-blue-400 backdrop-blur-3xl hover:bg-slate-900 transition-colors">
-                                    <IconDeviceFloppy size={25} /> Guardar
+                                    {saving ? <IconLoader2 className="animate-spin" size={20} /> : <IconDeviceFloppy size={20} />} 
+                                    {idToEdit ? "Actualizar" : "Guardar"}
                                 </span>
                             </button>
 
@@ -432,44 +472,67 @@ export default function CrearEstacionamientoPage() {
                             >
                                 <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#F87171_0%,#DC2626_50%,#F87171_100%)]" />
                                 <span className="inline-flex h-full w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-slate-950 px-6 py-1 text-sm font-medium text-red-400 backdrop-blur-3xl hover:bg-slate-900 transition-colors">
-                                    <IconX size={25} /> Cancelar
+                                    <IconX size={20} /> Cancelar
                                 </span>
                             </button>
                         </div>
                     </div>
+                    {/* --- AQUÍ ESTÁ EL BLOQUE DE ALERTAS VISUALES --- */}
+                    <AnimatePresence mode="wait">
+                        {alerta && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                                transition={{ duration: 0.2 }}
+                                className={cn(
+                                    "p-4 rounded-lg flex items-start gap-3 shadow-sm border mb-6",
+                                    alerta.type === 'success' 
+                                        ? "bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300" 
+                                        : "bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300"
+                                )}
+                            >
+                                {alerta.type === 'success' ? (
+                                    <IconCheck className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                                ) : (
+                                    <IconInfoCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                                )}
+                                <div className="flex-1 text-sm font-medium">{alerta.text}</div>
+                                
+                                {/* Botón para cerrar alerta manualmente */}
+                                <button type="button" onClick={() => setAlerta(null)} className="opacity-50 hover:opacity-100">
+                                    <IconX size={18} />
+                                </button>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </form>
             </div>
         </div>
       </div>
 
-      {/* --- MODAL CONFIRMACIÓN --- */}
+      {/* --- MODAL DE CONFIRMACIÓN --- */}
       {showModal && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          
-          {/* REEMPLAZO: Contenedor estático para simular el borde amarillo sin efectos extraños */}
           <div className="relative w-full max-w-md rounded-2xl p-2 bg-yellow-400 shadow-2xl animate-in fade-in zoom-in duration-300">
-            
-            {/* Contenido interior (Fondo negro/blanco) */}
             <div className="bg-white dark:bg-black rounded-[14px] w-full h-full p-8 flex flex-col items-center text-center">
                 
-                {/* Icono Amarillo */}
                 <div className="mb-6 relative">
                     <div className="absolute inset-0 bg-yellow-500/20 blur-xl rounded-full"></div>
                     <IconAlertTriangle className="h-20 w-20 text-yellow-500 relative z-10" />
                 </div>
 
                 <h2 className="text-2xl font-bold text-neutral-800 dark:text-neutral-200 mb-2">
-                    Confirmación
+                    Confirmar {idToEdit ? "Edición" : "Creación"}
                 </h2>
                 
                 <p className="text-neutral-600 dark:text-neutral-300 mb-8">
-                    ¿Esta seguro que desea crear un Nuevo Estacionamiento?
+                    ¿Estás seguro que deseas {idToEdit ? "Actualizar los datos de" : "Registrar"} este Estacionamiento?
                 </p>
 
-                {/* BOTONES DEL MODAL */}
                 <div className="flex flex-col md:flex-row gap-4 w-full justify-center">
                     
-                    {/* ACEPTAR (Izquierda) */}
+                    {/* ACEPTAR */}
                     <button 
                         type="button" 
                         onClick={handleConfirmSave}
@@ -477,11 +540,11 @@ export default function CrearEstacionamientoPage() {
                     >
                         <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#60A5FA_0%,#2563EB_50%,#60A5FA_100%)]" />
                         <span className="inline-flex h-full w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-slate-950 px-6 py-1 text-sm font-medium text-blue-400 backdrop-blur-3xl group-hover:bg-slate-900 transition-colors">
-                            <IconDeviceFloppy size={25} /> Aceptar
+                            <IconCheck size={25} /> Confirmar
                         </span>
                     </button>
 
-                    {/* CANCELAR (Derecha) */}
+                    {/* CANCELAR */}
                     <button 
                         type="button" 
                         onClick={() => setShowModal(false)} 
@@ -498,30 +561,15 @@ export default function CrearEstacionamientoPage() {
         </div>
       )}
 
-    </div>
+    </AppSidebar>
   );
 }
 
-// Logo Components
-export const Logo = () => {
-  return (
-    <Link href="/dashboard" className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20">
-      <div className="h-8 w-8 relative overflow-hidden rounded-full flex-shrink-0">
-        <Image src="/LogoACE_SinFondo.png" alt="Logo EstACE" fill className="object-cover" />
-      </div>
-      <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-medium text-black dark:text-white whitespace-pre">
-        EstACE V2
-      </motion.span>
-    </Link>
-  );
-};
-
-export const LogoIcon = () => {
-  return (
-    <Link href="/dashboard" className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20">
-      <div className="h-8 w-8 relative overflow-hidden rounded-full flex-shrink-0">
-        <Image src="/LogoACE_SinFondo.png" alt="Logo EstACE" fill className="object-cover" />
-      </div>
-    </Link>
-  );
-};
+// Wrapper para Suspense
+export default function CrearEstacionamientoPage() {
+    return (
+        <Suspense fallback={<div className="flex items-center justify-center h-screen bg-gray-100 dark:bg-neutral-900">Cargando...</div>}>
+            <CrearEditarContent />
+        </Suspense>
+    );
+}
