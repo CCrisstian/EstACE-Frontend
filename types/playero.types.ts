@@ -1,6 +1,7 @@
 export interface Playero {
   legajo: number;
   dni: number;
+  avatarUrl?: string | null;
   nombre: string;
   apellido: string;
   nombreEstacionamiento: string; // Para mostrar en la tabla

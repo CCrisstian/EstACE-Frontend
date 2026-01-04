@@ -14,6 +14,8 @@ import { Playero } from "@/types/playero.types";
 
 import RoleGuard from "@/components/RoleGuard";
 
+import Image from "next/image";
+
 export default function PlayerosListPage() {
   const router = useRouter();
   const [playeros, setPlayeros] = useState<Playero[]>([]);
@@ -100,11 +102,28 @@ export default function PlayerosListPage() {
                       ) : (
                         filteredPlayeros.map((p) => (
                           <tr key={p.legajo} className="hover:bg-gray-50 dark:hover:bg-neutral-800/50">
-                            <td className="px-6 py-4 font-medium text-gray-900 dark:text-white flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-xs">
-                                {p.nombre.charAt(0)}{p.apellido.charAt(0)}
+                            {/* CELDA DE NOMBRE + FOTO */}
+                            <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                              <div className="flex items-center gap-3">
+                                {/* Contenedor del Avatar */}
+                                <div className="relative h-9 w-9 flex-shrink-0 rounded-full overflow-hidden border border-gray-200 dark:border-neutral-700 bg-blue-100 dark:bg-blue-900/30">
+                                  {p.avatarUrl ? (
+                                    <Image 
+                                      src={p.avatarUrl} 
+                                      alt={p.nombre} 
+                                      fill 
+                                      className="object-cover"
+                                      sizes="40px"
+                                    />
+                                  ) : (
+                                    <div className="h-full w-full flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-xs">
+                                      {p.nombre.charAt(0)}{p.apellido.charAt(0)}
+                                    </div>
+                                  )}
+                                </div>
+                                {/* Nombre */}
+                                <span>{p.nombre} {p.apellido}</span>
                               </div>
-                              {p.nombre} {p.apellido}
                             </td>
                             <td className="px-6 py-4 text-gray-500 dark:text-gray-400">
                               {p.legajo}

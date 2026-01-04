@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.8",
+    "@supabase/supabase-js": "^2.89.0",
     "@tabler/icons-react": "^3.36.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.26",

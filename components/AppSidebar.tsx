@@ -198,8 +198,22 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
                 label: usuario ? `${usuario.nombre} ${usuario.apellido}` : "Cargando...",
                 href: "/perfil",
                 icon: (
-                  <div className="h-7 w-7 flex-shrink-0 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white">
-                    {usuario?.nombre?.charAt(0) || "U"}
+                  <div className="h-7 w-7 flex-shrink-0 rounded-full overflow-hidden relative border border-gray-200 dark:border-neutral-700">
+                    {usuario?.avatarUrl ? (
+                      // SI HAY FOTO: Mostrar imagen
+                      <Image 
+                        src={usuario.avatarUrl} 
+                        alt="Avatar" 
+                        fill 
+                        className="object-cover"
+                        sizes="30px"
+                      />
+                    ) : (
+                      // SI NO HAY FOTO: Mostrar inicial con fondo azul
+                      <div className="h-full w-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white">
+                        {usuario?.nombre?.charAt(0).toUpperCase() || "U"}
+                      </div>
+                    )}
                   </div>
                 ),
               }}
