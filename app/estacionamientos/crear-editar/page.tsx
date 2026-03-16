@@ -204,7 +204,7 @@ function CrearEditarContent() {
     }
   };
 
-  // PASO 1: Validaciones (Abre el Modal)
+  // PASO 1: Validaciones
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -227,7 +227,7 @@ function CrearEditarContent() {
     setShowModal(true);
   };
 
-  // PASO 2: Confirmación y Guardado (API)
+  // PASO 2: Confirmación y Guardado 
   const handleConfirmSave = async () => {
     setShowModal(false);
     setSaving(true);
@@ -253,11 +253,9 @@ function CrearEditarContent() {
 
         if (idToEdit) {
             await editarEstacionamiento(Number(idToEdit), datosParaBackend, token);
-            // Mensaje Personalizado EDICIÓN
             setAlerta({ type: 'success', text: "¡Cambios guardados! Tu Estacionamiento ha sido Actualizado correctamente." });
         } else {
             await crearEstacionamiento(datosParaBackend, token);
-            // Mensaje Personalizado CREACIÓN
             setAlerta({ type: 'success', text: "¡Éxito! Se ha registrado el Nuevo Estacionamiento." });
         }
 
@@ -300,9 +298,9 @@ function CrearEditarContent() {
             <div className="max-w-5xl mx-auto mt-6 pb-20">
                 
                 <div className="mb-8">
-                    <h2 className="text-3xl font-bold text-gray-800 dark:text-white">
+                    <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
                         {idToEdit ? "Editar Estacionamiento" : "Nuevo Estacionamiento"}
-                    </h2>
+                    </h1>
                     <p className="text-gray-500 dark:text-gray-400 mt-1">
                         {idToEdit ? "Modifica los datos de tu Estacionamiento." : "Completa la información para registrar un nuevo Estacionamiento."}
                     </p>

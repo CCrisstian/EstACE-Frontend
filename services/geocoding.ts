@@ -36,7 +36,7 @@ export const obtenerCoordenadas = async (
     const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(direccionCompleta)}&format=json&limit=1`;
 
     // 3. Hacemos la petición
-    // Nota: Nominatim pide un User-Agent. En navegadores modernos el browser pone uno por defecto.
+    // Nominatim pide un User-Agent. En navegadores modernos el browser pone uno por defecto.
     const response = await fetch(url);
     
     if (!response.ok) return { lat: null, lon: null };
@@ -62,7 +62,7 @@ export const obtenerCoordenadas = async (
 
 /**
  * Obtiene la dirección aproximada basada en coordenadas.
- * MEJORA: Se agrega zoom=18 para intentar capturar la altura exacta.
+ * Se agrega zoom=18 para intentar capturar la altura exacta.
  */
 export const obtenerDireccionDesdeCoordenadas = async (lat: number, lon: number): Promise<ReverseGeocodingResult | null> => {
   try {
@@ -76,14 +76,10 @@ export const obtenerDireccionDesdeCoordenadas = async (lat: number, lon: number)
     const data = await response.json();
     const addr = data.address || {};
 
-    // 1. Mejoramos la detección de la calle buscando en más campos posibles
     const calle = addr.road || addr.pedestrian || addr.street || addr.residential || addr.suburb || "";
     
-    // 2. Intentamos obtener la altura (house_number)
-    // Nota: Si el número no está mapeado en OpenStreetMap, esto seguirá llegando vacío.
     const altura = addr.house_number || "";
     
-    // 3. Normalización de Localidad (OpenStreetMap es caótico con esto)
     const localidad = addr.city || addr.town || addr.village || addr.city_district || addr.municipality || "";
     
     const provincia = addr.state || addr.province || "";

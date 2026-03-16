@@ -1,6 +1,6 @@
 import { Playero, PlayeroRequest } from "@/types/playero.types";
 
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || "https://estace-v2.onrender.com") + "/api/playeros";
+const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/playeros`;
 
 const getHeaders = (token: string) => ({
   "Content-Type": "application/json",
@@ -9,7 +9,14 @@ const getHeaders = (token: string) => ({
 
 export const obtenerMisPlayeros = async (token: string): Promise<Playero[]> => {
   const res = await fetch(API_URL, { headers: getHeaders(token) });
-  if (!res.ok) throw new Error("Error al obtener playeros");
+  if (!res.ok) {
+    // Si falla, leemos la respuesta del backend
+    const errorDetalle = await res.text();
+    console.error(`ERROR DEL BACKEND - Status: ${res.status}`);
+    console.error(`DETALLE: ${errorDetalle}`);
+    
+    throw new Error(`Error ${res.status} al obtener playeros`);
+  }
   return res.json();
 };
 

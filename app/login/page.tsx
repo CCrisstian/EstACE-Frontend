@@ -8,9 +8,10 @@ import { useRouter } from "next/navigation";
 import { loginUsuario } from "@/services/authService";
 import { IconEye, IconEyeOff } from "@tabler/icons-react";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
+import Link from "next/link"; // Importamos Link
 
 export default function LoginPage() {
-  const [legajo, setLegajo] = useState("");
+  const [email, setEmail] = useState(""); // <-- Cambiado a email
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isVisible, setIsVisible] = useState(false);
@@ -21,14 +22,15 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const data = await loginUsuario({ legajo: Number(legajo), password });
+      // Enviamos el email a la API
+      const data = await loginUsuario({ email, password });
       
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuario", JSON.stringify(data));
 
       router.push("/dashboard");
     } catch (err) {
-      setError("Legajo o contraseña incorrectos.");
+      setError("Correo electrónico o contraseña incorrectos.");
     }
   };
 
@@ -44,7 +46,7 @@ export default function LoginPage() {
           Bienvenido a A.C.E. V2.0
         </h2>
         <p className="mt-2 max-w-sm text-sm text-neutral-600 dark:text-neutral-300">
-          Ingresa tu legajo y contraseña para acceder al sistema.
+          Ingresa tu correo y contraseña para acceder al sistema.
         </p>
 
         {error && (
@@ -54,20 +56,31 @@ export default function LoginPage() {
         )}
 
         <form className="my-8 w-full" onSubmit={handleSubmit}>
+          
           <LabelInputContainer className="mb-4">
-            <Label htmlFor="legajo">Legajo</Label>
+            <Label htmlFor="email">Correo Electrónico</Label>
             <Input 
-              id="legajo" 
-              placeholder="1234" 
-              type="number" 
-              value={legajo}
-              onChange={(e) => setLegajo(e.target.value)}
+              id="email" 
+              placeholder="ejemplo@correo.com" 
+              type="email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </LabelInputContainer>
           
           <LabelInputContainer className="mb-8">
-            <Label htmlFor="password">Contraseña</Label>
+            {/* Flex container para poner el label y el link de recuperar contraseña en la misma línea */}
+            <div className="flex justify-between items-center mb-1">
+                <Label htmlFor="password" className="mb-0">Contraseña</Label>
+                <Link 
+                    href="/recuperar-password" 
+                    className="text-xs font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                >
+                    ¿Olvidaste tu contraseña?
+                </Link>
+            </div>
+            
             <div className="relative">
               <Input
                 id="password"

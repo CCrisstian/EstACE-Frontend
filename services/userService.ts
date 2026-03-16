@@ -1,8 +1,6 @@
 import { UsuarioResponse, UsuarioUpdateRequest } from "@/types/usuario.types";
 
-// Ajustar la URL base según corresponda (Local o Render)
-const API_URL = "https://estace-v2.onrender.com/api/usuarios"; 
-// para local: "http://localhost:8080/api/usuarios"
+const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/usuarios`;
 
 // --- 1. Obtener Perfil (GET) ---
 export const obtenerPerfil = async (token: string): Promise<UsuarioResponse> => {

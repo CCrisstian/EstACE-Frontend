@@ -38,10 +38,6 @@ export const obtenerProvincias = async (): Promise<Provincia[]> => {
   }
 };
 
-/**
- * Obtiene las localidades de una provincia específica.
- * @param nombreProvincia El nombre exacto de la provincia seleccionada
- */
 export const obtenerLocalidades = async (nombreProvincia: string): Promise<Localidad[]> => {
   try {
     if (!nombreProvincia) return [];

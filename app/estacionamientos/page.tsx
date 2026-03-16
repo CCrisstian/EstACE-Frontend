@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-// Iconos locales de la página
 import {
   IconPlus,
   IconPencil,
@@ -18,10 +17,13 @@ import {
   IconX,
   IconMapPin,
   IconClock,
-  IconCalendar
+  IconCalendar,
+  IconParkingCircle,
+  IconSelector,       
+  IconChevronUp,      
+  IconChevronDown     
 } from "@tabler/icons-react";
 
-// Importamos Wrapper
 import { AppSidebar } from "@/components/AppSidebar"; 
 
 // Servicios y Tipos
@@ -30,16 +32,22 @@ import { Estacionamiento } from "@/types/estacionamiento.types";
 
 import RoleGuard from "@/components/RoleGuard";
 
+// Definimos el tipo de clave por poder ordenar
+type SortKey = keyof Estacionamiento;
+
 export default function EstacionamientosListPage() {
   const router = useRouter();
 
   // Estados de datos
   const [estacionamientos, setEstacionamientos] = useState<Estacionamiento[]>([]);
-  const [selectedEstacionamiento, setSelectedEstacionamiento] = useState<Estacionamiento | null>(null); // <-- Estado para el modal
+  const [selectedEstacionamiento, setSelectedEstacionamiento] = useState<Estacionamiento | null>(null);
   
   // Estados de UI
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Estados para el ordenamiento
+  const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'asc' | 'desc' } | null>(null);
 
   // --- EFECTOS ---
   useEffect(() => {
@@ -64,26 +72,83 @@ export default function EstacionamientosListPage() {
     initData();
   }, [router]);
 
-  // --- LÓGICA DE FILTRADO ---
+  // --- LÓGICA DE FILTRADO (Buscador) ---
   const filteredEstacionamientos = estacionamientos.filter(est => 
     est.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
     est.direccion.toLowerCase().includes(searchTerm.toLowerCase()) ||
     est.localidad.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // --- LÓGICA DE ORDENAMIENTO ---
+  const handleSort = (key: SortKey) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    
+    // Si ya estamos ordenando por esta columna y es ascendente, lo cambiamos a descendente
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    
+    setSortConfig({ key, direction });
+  };
+
+  const sortedEstacionamientos = [...filteredEstacionamientos].sort((a, b) => {
+    if (!sortConfig) return 0; // Si no hay configuración de orden, lo dejamos como viene
+
+    const { key, direction } = sortConfig;
+    const valA = a[key];
+    const valB = b[key];
+
+    // Para evitar errores si hay valores nulos
+    if (valA === null || valA === undefined) return direction === 'asc' ? 1 : -1;
+    if (valB === null || valB === undefined) return direction === 'asc' ? -1 : 1;
+
+    // Si son strings, usamos localeCompare para ordenar alfabéticamente
+    if (typeof valA === 'string' && typeof valB === 'string') {
+      return direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    }
+
+    // Si son números o booleanos
+    if (valA < valB) return direction === 'asc' ? -1 : 1;
+    if (valA > valB) return direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  // --- COMPONENTE AUXILIAR PARA DIBUJAR LOS ENCABEZADOS DE TABLA ---
+  const renderSortHeader = (label: string, key: SortKey, align: 'left' | 'center' = 'left') => {
+    const isSorted = sortConfig?.key === key;
+    return (
+      <th 
+        className="px-6 py-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors select-none group"
+        onClick={() => handleSort(key)}
+        title={`Ordenar por ${label}`}
+      >
+        <div className={`flex items-center gap-1 ${align === 'center' ? 'justify-center' : 'justify-start'}`}>
+          {label}
+          <span className={`text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors ${!isSorted ? 'opacity-30 group-hover:opacity-100' : 'text-blue-500 dark:text-blue-400'}`}>
+            {isSorted ? (
+              sortConfig.direction === 'asc' ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />
+            ) : (
+              <IconSelector size={16} />
+            )}
+          </span>
+        </div>
+      </th>
+    );
+  };
+
   return (
     <RoleGuard allowedRoles={["Dueño"]}>
     <AppSidebar>
       <div className="flex-1 w-full h-full overflow-hidden bg-white dark:bg-neutral-900">
         <div className="w-full h-full overflow-y-auto p-4 md:p-10">
-          <div className="max-w-6xl mx-auto mt-6">
             
-            {/* ENCABEZADO */}
-            <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+            {/* ENCABEZADO  */}
+            <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 mt-4 md:mt-0">
               <div>
-                <h2 className="text-3xl font-bold text-gray-800 dark:text-white">
-                  Mis Estacionamientos
-                </h2>
+                <h1 className="text-3xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                  <IconParkingCircle className="h-8 w-8 text-blue-500" />
+                  Gestión de Estacionamientos
+                </h1>
                 <p className="text-gray-500 dark:text-gray-400 mt-1">
                   Gestiona y visualiza tus Estacionamientos registrados.
                 </p>
@@ -98,128 +163,129 @@ export default function EstacionamientosListPage() {
                   >
                     <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#4ADE80_0%,#16A34A_50%,#4ADE80_100%)]" />
                     <span className="inline-flex h-full w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-6 py-1 text-sm font-medium text-green-400 backdrop-blur-3xl hover:bg-slate-900 transition-colors">
-                      <IconPlus size={25} />
-                      Agregar EStacionamiento
+                      <IconPlus size={20} />
+                      Agregar Estacionamiento
                     </span>
                   </button>
                 </Link>
               )}
             </div>
 
-            {/* TABLA Y BUSCADOR */}
-            <div className="bg-white dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 rounded-xl overflow-hidden shadow-sm">
-              
-              {/* Buscador */}
-              <div className="p-4 border-b border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/80 flex items-center gap-3">
-                <IconSearch size={18} className="text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Buscar por nombre, dirección o localidad..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-200 w-full placeholder-gray-400"
-                />
-                {loading && <IconLoader2 className="animate-spin text-blue-500 h-5 w-5" />}
-              </div>
+            <div className="max-w-6xl mx-auto">
+              {/* TABLA Y BUSCADOR */}
+              <div className="bg-white dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 rounded-xl overflow-hidden shadow-sm">
+                
+                {/* Buscador */}
+                <div className="p-4 border-b border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/80 flex items-center gap-3">
+                  <IconSearch size={18} className="text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Buscar por nombre, dirección o localidad..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-200 w-full placeholder-gray-400"
+                  />
+                  {loading && <IconLoader2 className="animate-spin text-blue-500 h-5 w-5" />}
+                </div>
 
-              {/* Tabla */}
-              <div className="overflow-x-auto min-h-[300px]">
-                <table className="w-full text-left text-sm text-gray-600 dark:text-gray-300">
-                  <thead className="bg-gray-100 dark:bg-neutral-800 text-xs uppercase font-semibold text-gray-500 dark:text-gray-400">
-                    <tr>
-                      <th className="px-6 py-4">Nombre</th>
-                      <th className="px-6 py-4">Provincia</th>
-                      <th className="px-6 py-4">Localidad</th>
-                      <th className="px-6 py-4">Dirección</th>
-                      <th className="px-6 py-4 text-center">Puntaje</th>
-                      <th className="px-6 py-4 text-center">Estado</th>
-                      <th className="px-6 py-4 text-right">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
-                    
-                    {loading ? (
+                {/* Tabla */}
+                <div className="overflow-x-auto min-h-[300px]">
+                  <table className="w-full text-left text-sm text-gray-600 dark:text-gray-300">
+                    <thead className="bg-gray-50 dark:bg-neutral-800/80 text-xs uppercase font-semibold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-neutral-700">
                       <tr>
-                        <td colSpan={7} className="px-6 py-20 text-center">
-                           <div className="flex flex-col items-center justify-center gap-3">
-                              <IconLoader2 className="h-8 w-8 animate-spin text-blue-500" />
-                              <span className="text-gray-400">Cargando tus estacionamientos...</span>
-                           </div>
-                        </td>
+                        {renderSortHeader("Nombre", "nombre")}
+                        {renderSortHeader("Provincia", "provincia")}
+                        {renderSortHeader("Localidad", "localidad")}
+                        {renderSortHeader("Dirección", "direccion")}
+                        {renderSortHeader("Puntaje", "puntaje", "center")}
+                        {renderSortHeader("Estado", "disponibilidad", "center")}
+                        <th className="px-6 py-4 text-right">Acciones</th>
                       </tr>
-                    ) : filteredEstacionamientos.length === 0 ? (
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
                       
-                      <tr>
-                        <td colSpan={7} className="px-6 py-20 text-center text-gray-400 dark:text-gray-500">
-                          <div className="flex flex-col items-center gap-3">
-                            <div className="p-4 bg-gray-100 dark:bg-neutral-800 rounded-full">
-                              <IconPencil size={32} className="opacity-40" />
-                            </div>
-                            <p className="text-lg font-medium">No se encontraron estacionamientos</p>
-                            <p className="text-sm opacity-70">
-                                {searchTerm ? "Intenta con otra búsqueda." : "Aún no has registrado ningún Estacionamiento."}
-                            </p>
-                          </div>
-                        </td>
-                      </tr>
-                    ) : (
-                      
-                      filteredEstacionamientos.map((est) => (
-                        <tr key={est.id} className="hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition-colors">
-                          <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                            {est.nombre}
+                      {loading ? (
+                        <tr>
+                          <td colSpan={7} className="px-6 py-20 text-center">
+                             <div className="flex flex-col items-center justify-center gap-3">
+                                <IconLoader2 className="h-8 w-8 animate-spin text-blue-500" />
+                                <span className="text-gray-400">Cargando tus estacionamientos...</span>
+                             </div>
                           </td>
-                          <td className="px-6 py-4">{est.provincia}</td>
-                          <td className="px-6 py-4">{est.localidad}</td>
-                          <td className="px-6 py-4">{est.direccion}</td>
-                          <td className="px-6 py-4 text-center">
-                            <div className="flex items-center justify-center gap-1 font-semibold text-yellow-600 dark:text-yellow-500">
-                                <span>{est.puntaje}</span>
-                                <IconStarFilled size={14} fill="currentColor" />
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            <div className="flex justify-center">
-                                {est.disponibilidad ? (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                                        <IconCircleCheck size={12} /> Disponible
-                                    </span>
-                                ) : (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
-                                        <IconXboxX size={12} /> No Disp.
-                                    </span>
-                                )}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <div className="flex justify-end gap-2">
-                                {/* Botón Ver Detalle (Ojo) */}
-                                <button
-                                    onClick={() => setSelectedEstacionamiento(est)}
-                                    className="inline-flex items-center justify-center p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-neutral-800 dark:hover:text-white transition-colors"
-                                    title="Ver Detalles"
-                                >
-                                    <IconEye size={18} />
-                                </button>
-
-                                {/* Botón Editar */}
-                                <Link 
-                                    href={`/estacionamientos/crear-editar?id=${est.id}`}
-                                    className="inline-flex items-center justify-center p-2 rounded-lg text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                                    title="Editar Estacionamiento"
-                                >
-                                    <IconEdit size={18} />
-                                </Link>
+                        </tr>
+                      ) : sortedEstacionamientos.length === 0 ? (
+                        
+                        <tr>
+                          <td colSpan={7} className="px-6 py-20 text-center text-gray-400 dark:text-gray-500">
+                            <div className="flex flex-col items-center gap-3">
+                              <div className="p-4 bg-gray-100 dark:bg-neutral-800 rounded-full">
+                                <IconPencil size={32} className="opacity-40" />
+                              </div>
+                              <p className="text-lg font-medium">No se encontraron estacionamientos</p>
+                              <p className="text-sm opacity-70">
+                                  {searchTerm ? "Intenta con otra búsqueda." : "Aún no has registrado ningún Estacionamiento."}
+                              </p>
                             </div>
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+                      ) : (
+                        
+                        sortedEstacionamientos.map((est) => (
+                          <tr key={est.id} className="hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition-colors">
+                            <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                              {est.nombre}
+                            </td>
+                            <td className="px-6 py-4">{est.provincia}</td>
+                            <td className="px-6 py-4">{est.localidad}</td>
+                            <td className="px-6 py-4">{est.direccion}</td>
+                            <td className="px-6 py-4 text-center">
+                              <div className="flex items-center justify-center gap-1 font-semibold text-yellow-600 dark:text-yellow-500">
+                                  <span>{est.puntaje}</span>
+                                  <IconStarFilled size={14} fill="currentColor" />
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                              <div className="flex justify-center">
+                                  {est.disponibilidad ? (
+                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                          <IconCircleCheck size={12} /> Disponible
+                                      </span>
+                                  ) : (
+                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                                          <IconXboxX size={12} /> No Disp.
+                                      </span>
+                                  )}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <div className="flex justify-end gap-2">
+                                  {/* Botón Ver Detalle */}
+                                  <button
+                                      onClick={() => setSelectedEstacionamiento(est)}
+                                      className="inline-flex items-center justify-center p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-neutral-800 dark:hover:text-white transition-colors"
+                                      title="Ver Detalles"
+                                  >
+                                      <IconEye size={18} />
+                                  </button>
+
+                                  {/* Botón Editar */}
+                                  <Link 
+                                      href={`/estacionamientos/crear-editar?id=${est.id}`}
+                                      className="inline-flex items-center justify-center p-2 rounded-lg text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                                      title="Editar Estacionamiento"
+                                  >
+                                      <IconEdit size={18} />
+                                  </Link>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
-          </div>
         </div>
 
         {/* --- MODAL DE DETALLES --- */}
@@ -242,7 +308,7 @@ export default function EstacionamientosListPage() {
                         </button>
                     </div>
 
-                    {/* Cuerpo del Modal (Scrollable) */}
+                    {/* Cuerpo del Modal */}
                     <div className="p-6 overflow-y-auto space-y-8">
                         
                         {/* 1. Información Principal */}

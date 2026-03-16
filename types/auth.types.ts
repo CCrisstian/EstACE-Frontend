@@ -8,6 +8,6 @@ export interface AuthResponse {
 }
 
 export interface LoginRequest {
-    legajo: number;
+    email: string;
     password: string;
 }

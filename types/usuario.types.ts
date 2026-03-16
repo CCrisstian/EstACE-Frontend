@@ -5,6 +5,9 @@ export interface UsuarioResponse {
     apellido: string;
     avatarUrl?: string | null;
     tipo: string;
+    email?: string;
+    telefono?: string;
+    direccion?: string;
 }
 
 export interface UsuarioUpdateRequest {
@@ -13,4 +16,7 @@ export interface UsuarioUpdateRequest {
     apellido: string;
     avatarUrl?: string | null;
     password?: string; // El signo ? indica que es opcional
+    email?: string;
+    telefono?: string;
+    direccion?: string;
 }

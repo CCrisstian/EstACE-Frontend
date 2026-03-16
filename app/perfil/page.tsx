@@ -44,7 +44,6 @@ export default function PerfilPage() {
   // Helper para alertas
   const handleShowAlert = (type: 'success' | 'error', text: string) => {
     setAlerta({ type, text });
-    // Auto-ocultar a los 5 segundos
     setTimeout(() => setAlerta(null), 5000);
   };
 
@@ -58,9 +57,12 @@ export default function PerfilPage() {
         const data = await obtenerPerfil(token);
         setUsuario(data);
         setFormData({
-          dni: data.dni,
-          nombre: data.nombre,
-          apellido: data.apellido,
+          dni: data.dni || "",
+          nombre: data.nombre || "",
+          apellido: data.apellido || "",
+          email: data.email || "",         
+          telefono: data.telefono || "",   
+          direccion: data.direccion || "", 
           password: "",
         });
         localStorage.setItem("usuario", JSON.stringify(data));
@@ -80,7 +82,6 @@ export default function PerfilPage() {
         setUsuario(updatedUser);
         localStorage.setItem("usuario", JSON.stringify(updatedUser)); 
         
-        // CONDICIÓN: Solo recargar si newUrl es NULL (significa que se eliminó)
         if (newUrl === null) {
             setTimeout(() => {
                 window.location.reload();
@@ -101,21 +102,41 @@ export default function PerfilPage() {
     setAlerta(null);
     if(usuario) {
         setFormData({
-            dni: usuario.dni,
-            nombre: usuario.nombre,
-            apellido: usuario.apellido,
+            dni: usuario.dni || "",
+            nombre: usuario.nombre || "",
+            apellido: usuario.apellido || "",
+            email: usuario.email || "",
+            telefono: usuario.telefono || "",
+            direccion: usuario.direccion || "",
             password: "",
         });
     }
   };
 
-  // --- ACCIONES DEL FORMULARIO (ABREN MODAL) ---
+  // --- ACCIONES DEL FORMULARIO ---
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validaciones Frontend
     if (!formData.dni || String(formData.dni).length !== 8) return handleShowAlert('error', "El DNI es inválido (8 números).");
     if (!formData.nombre.trim() || !formData.apellido.trim()) return handleShowAlert('error', "Nombre y apellido son obligatorios.");
     const soloLetrasRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
     if (!soloLetrasRegex.test(formData.nombre) || !soloLetrasRegex.test(formData.apellido)) return handleShowAlert('error', "Solo letras en nombre/apellido.");
+    
+    if (!formData.email.trim() || !formData.email.includes("@")) return handleShowAlert('error', "Por favor ingresa un correo electrónico válido.");
+    if (!formData.telefono.trim()) return handleShowAlert('error', "El teléfono es obligatorio.");
+    
+    // Validación estricta de Teléfono Argentino (Fijos y Celulares)
+      const telefonoRegex = /^(?:(?:00|\+)?54\s?9?\s?)?(?:11|[234678]\d{2,3})[\s-]?\d{6,8}$/;
+      if (!telefonoRegex.test(formData.telefono)) {
+        setAlerta({ 
+            type: 'error', 
+            text: "Teléfono inválido. Usa un formato válido como +54 9 11 1234-5678 o código de área y número." 
+        });
+        return;
+      }
+    
+    if (!formData.direccion.trim()) return handleShowAlert('error', "La dirección es obligatoria.");
 
     setModalAction('save_profile');
     setShowModal(true);
@@ -144,11 +165,9 @@ export default function PerfilPage() {
 
         } else if (modalAction === 'delete_avatar') {
             if (usuario?.avatarUrl) {
-                // 1. Borrar de Supabase
                 const fileName = usuario.avatarUrl.split('/').pop();
                 if (fileName) await supabase.storage.from('avatars').remove([fileName]);
                 
-                // 2. Borrar de Backend
                 const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/usuarios/${usuario.legajo}/avatar`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -167,7 +186,6 @@ export default function PerfilPage() {
     }
   };
 
-  // Configuración dinámica del contenido del modal según la acción
   const getModalContent = () => {
     if (modalAction === 'delete_avatar') {
         return {
@@ -205,7 +223,7 @@ export default function PerfilPage() {
                 {/* Encabezado */}
                 <div className="mb-8">
                     <div className="flex items-center gap-3">
-                        <h2 className="text-3xl font-bold text-gray-800 dark:text-white">Mi Perfil</h2>
+                        <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Mi Perfil</h1>
                         {!isEditing && (
                             <button 
                                 onClick={handleEditClick} 
@@ -225,7 +243,6 @@ export default function PerfilPage() {
                     {/* COLUMNA 1: FORMULARIO */}
                     <div className="lg:col-span-2 order-2 lg:order-1">
                         
-                        {/* --- ALERTAS VISUALES --- */}
                         <AnimatePresence mode="wait">
                             {alerta && (
                                 <motion.div
@@ -248,6 +265,7 @@ export default function PerfilPage() {
                         </AnimatePresence>
         
                         <form onSubmit={handleSubmit} className="space-y-5 max-w-xl">
+                            
                             {/* Legajo y DNI*/}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
@@ -259,24 +277,16 @@ export default function PerfilPage() {
                                         className="w-full rounded-lg border-gray-300 dark:border-neutral-700 bg-gray-100 dark:bg-neutral-800 text-gray-500 dark:text-gray-400 shadow-sm p-2.5 text-sm" 
                                     />
                                 </div>
-
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-neutral-400 mb-1">DNI</label>
                                     <input 
-                                        type="number" 
-                                        name="dni" 
+                                        type="number" name="dni" 
                                         value={isEditing ? formData.dni : usuario?.dni} 
-                                        onChange={handleChange} 
-                                        disabled={!isEditing} 
-                                        required
+                                        onChange={handleChange} disabled={!isEditing} required
                                         className={cn(
                                             "w-full rounded-lg border shadow-sm p-2.5 text-sm transition-colors", 
-                                            isEditing 
-                                                ? "bg-white dark:bg-neutral-900 dark:text-white" 
-                                                : "bg-gray-50 dark:bg-neutral-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-neutral-700", 
-                                            isEditing && alerta?.type === 'error' && String(formData.dni).length !== 8 
-                                                ? "border-red-500 focus:ring-red-500" 
-                                                : "border-gray-300 focus:border-blue-500"
+                                            isEditing ? "bg-white dark:bg-neutral-900 dark:text-white" : "bg-gray-50 dark:bg-neutral-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-neutral-700", 
+                                            isEditing && alerta?.type === 'error' && String(formData.dni).length !== 8 ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"
                                         )}
                                     />
                                 </div>
@@ -287,37 +297,69 @@ export default function PerfilPage() {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-neutral-400 mb-1">Nombre</label>
                                     <input 
-                                        type="text" 
-                                        name="nombre" 
+                                        type="text" name="nombre" 
                                         value={isEditing ? formData.nombre : usuario?.nombre} 
-                                        onChange={handleChange} 
-                                        disabled={!isEditing} 
-                                        required
+                                        onChange={handleChange} disabled={!isEditing} required
                                         className={cn(
                                             "w-full rounded-lg border shadow-sm p-2.5 text-sm transition-colors", 
-                                            isEditing 
-                                                ? "border-gray-300 focus:border-blue-500 bg-white dark:bg-neutral-900 dark:text-white" 
-                                                : "border-gray-300 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 text-gray-600 dark:text-gray-300"
+                                            isEditing ? "border-gray-300 focus:border-blue-500 bg-white dark:bg-neutral-900 dark:text-white" : "border-gray-300 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 text-gray-600 dark:text-gray-300"
                                         )}
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-neutral-400 mb-1">Apellido</label>
                                     <input 
-                                        type="text" 
-                                        name="apellido" 
+                                        type="text" name="apellido" 
                                         value={isEditing ? formData.apellido : usuario?.apellido} 
-                                        onChange={handleChange} 
-                                        disabled={!isEditing} 
-                                        required
+                                        onChange={handleChange} disabled={!isEditing} required
                                         className={cn(
                                             "w-full rounded-lg border shadow-sm p-2.5 text-sm transition-colors", 
-                                            isEditing 
-                                                ? "border-gray-300 focus:border-blue-500 bg-white dark:bg-neutral-900 dark:text-white" 
-                                                : "border-gray-300 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 text-gray-600 dark:text-gray-300"
+                                            isEditing ? "border-gray-300 focus:border-blue-500 bg-white dark:bg-neutral-900 dark:text-white" : "border-gray-300 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 text-gray-600 dark:text-gray-300"
                                         )}
                                     />
                                 </div>
+                            </div>
+
+                            {/* --- EMAIL y TELÉFONO --- */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-400 mb-1">Correo Electrónico</label>
+                                    <input 
+                                        type="email" name="email" placeholder="ejemplo@correo.com"
+                                        value={isEditing ? formData.email : usuario?.email || ""} 
+                                        onChange={handleChange} disabled={!isEditing} required
+                                        className={cn(
+                                            "w-full rounded-lg border shadow-sm p-2.5 text-sm transition-colors", 
+                                            isEditing ? "border-gray-300 focus:border-blue-500 bg-white dark:bg-neutral-900 dark:text-white" : "border-gray-300 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 text-gray-600 dark:text-gray-300"
+                                        )}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-400 mb-1">Teléfono</label>
+                                    <input 
+                                        type="text" name="telefono" placeholder="+54 370 4123456"
+                                        value={isEditing ? formData.telefono : usuario?.telefono || ""} 
+                                        onChange={handleChange} disabled={!isEditing} required
+                                        className={cn(
+                                            "w-full rounded-lg border shadow-sm p-2.5 text-sm transition-colors", 
+                                            isEditing ? "border-gray-300 focus:border-blue-500 bg-white dark:bg-neutral-900 dark:text-white" : "border-gray-300 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 text-gray-600 dark:text-gray-300"
+                                        )}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Dirección (Ocupa fila completa) */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-400 mb-1">Dirección Completa</label>
+                                <input 
+                                    type="text" name="direccion" placeholder="Calle, Número, Localidad..."
+                                    value={isEditing ? formData.direccion : usuario?.direccion || ""} 
+                                    onChange={handleChange} disabled={!isEditing} required
+                                    className={cn(
+                                        "w-full rounded-lg border shadow-sm p-2.5 text-sm transition-colors", 
+                                        isEditing ? "border-gray-300 focus:border-blue-500 bg-white dark:bg-neutral-900 dark:text-white" : "border-gray-300 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 text-gray-600 dark:text-gray-300"
+                                    )}
+                                />
                             </div>
 
                             {/* Rol */}
@@ -401,7 +443,6 @@ export default function PerfilPage() {
 
                 <div className="flex flex-col md:flex-row gap-4 w-full justify-center">
                     
-                    {/* BOTÓN CONFIRMAR */}
                     <button type="button" onClick={handleConfirmAction} className="relative inline-flex h-12 w-full overflow-hidden rounded-full p-[6px] focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-50 group">
                         <span className={cn("absolute inset-[-1000%] animate-[spin_2s_linear_infinite]", modalContent.btnGradient)} />
                         <span className={cn("inline-flex h-full w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-slate-950 px-6 py-1 text-sm font-medium backdrop-blur-3xl group-hover:bg-slate-900 transition-colors", modalContent.btnTextColor)}>
@@ -410,7 +451,6 @@ export default function PerfilPage() {
                         </span>
                     </button>
 
-                    {/* BOTÓN CANCELAR */}
                     <button type="button" onClick={() => setShowModal(false)} className="relative inline-flex h-12 w-full overflow-hidden rounded-full p-[6px] focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-slate-50 group">
                         <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#F87171_0%,#DC2626_50%,#F87171_100%)]" />
                         <span className="inline-flex h-full w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-slate-950 px-6 py-1 text-sm font-medium text-red-400 backdrop-blur-3xl group-hover:bg-slate-900 transition-colors">

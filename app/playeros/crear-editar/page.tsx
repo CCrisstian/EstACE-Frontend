@@ -1,18 +1,20 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AppSidebar } from "@/components/AppSidebar";
+import Image from "next/image";
 import { 
-  IconUser, IconDeviceFloppy, IconX, IconAlertTriangle, IconCheck, IconInfoCircle, IconLoader2 
+  IconUser, IconDeviceFloppy, IconX, IconAlertTriangle, IconCheck, IconInfoCircle, IconLoader2, IconCamera, IconUpload
 } from "@tabler/icons-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 // Servicios
 import { crearPlayero, editarPlayero, obtenerPlayeroPorId } from "@/services/playeroService";
-import { obtenerMisEstacionamientos } from "@/services/estacionamientoService";
+import { obtenerEstacionamientosActivos } from "@/services/estacionamientoService";
 import { Estacionamiento } from "@/types/estacionamiento.types";
+import { supabase } from "@/lib/supabase";
 
 import RoleGuard from "@/components/RoleGuard";
 
@@ -27,14 +29,23 @@ function CrearEditarPlayeroContent() {
   const [alerta, setAlerta] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [showModal, setShowModal] = useState(false);
 
+  // --- ESTADOS PARA LA FOTO DE PERFIL ---
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [form, setForm] = useState({
     dni: "",
     nombre: "",
     apellido: "",
+    email: "",       
+    telefono: "",    
+    direccion: "",   
     password: "",
     rol: "Playero",
     estacionamientoId: "",
-    activo: true
+    activo: true,
+    avatarUrl: ""
   });
 
   useEffect(() => {
@@ -43,7 +54,7 @@ function CrearEditarPlayeroContent() {
         if (!token) { router.push("/"); return; }
   
         try {
-          const ests = await obtenerMisEstacionamientos(token);
+          const ests = await obtenerEstacionamientosActivos(token);
           setEstacionamientos(ests);
   
           if (idToEdit) {
@@ -53,12 +64,24 @@ function CrearEditarPlayeroContent() {
               dni: String(data.dni),
               nombre: data.nombre,
               apellido: data.apellido,
+              email: data.email || "",             
+              telefono: data.telefono || "",       
+              direccion: data.direccion || "",     
               password: "",
               rol: "Playero",
               estacionamientoId: data.estacionamientoId ? String(data.estacionamientoId) : "",
-              activo: data.activo
+              activo: data.activo,
+              avatarUrl: data.avatarUrl || ""
             });
+            if (data.avatarUrl) {
+                setPreviewUrl(data.avatarUrl);
+            }
             setLoadingData(false);
+          } else {
+              const globalEstId = localStorage.getItem("selectedEstId");
+              if (globalEstId) {
+                  setForm(prev => ({ ...prev, estacionamientoId: globalEstId })); 
+              }
           }
         } catch (error) {
           setAlerta({ type: 'error', text: "Error cargando datos iniciales." });
@@ -77,19 +100,88 @@ function CrearEditarPlayeroContent() {
       if (alerta) setAlerta(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
+const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
+      
       if (!form.dni || !form.nombre || !form.apellido) {
         setAlerta({ type: 'error', text: "Completa los campos obligatorios." });
         return;
       }
-      // VALIDACIÓN OBLIGATORIA
+
+      // Validar contraseña solo en caso de CREAR un nuevo playero
+      if (!idToEdit && !form.password.trim()) {
+        setAlerta({ type: 'error', text: "La contraseña es obligatoria para nuevos playeros." });
+        return;
+      }
+
+      if (!form.email.trim() || !form.email.includes("@")) {
+        setAlerta({ type: 'error', text: "Ingresa un correo electrónico válido." });
+        return;
+      }
+      
+      if (!form.telefono.trim()) {
+        setAlerta({ type: 'error', text: "El teléfono es obligatorio." });
+        return;
+      }
+
+      // Validación estricta de Teléfono Argentino (Fijos y Celulares)
+      const telefonoRegex = /^(?:(?:00|\+)?54\s?9?\s?)?(?:11|[234678]\d{2,3})[\s-]?\d{6,8}$/;
+      if (!telefonoRegex.test(form.telefono)) {
+        setAlerta({ 
+            type: 'error', 
+            text: "Teléfono inválido. Usa un formato válido como +54 9 11 1234-5678 o código de área y número." 
+        });
+        return;
+      }
+
+      if (!form.direccion.trim()) {
+        setAlerta({ type: 'error', text: "La dirección es obligatoria." });
+        return;
+      }
+
       if (!form.estacionamientoId) {
         setAlerta({ type: 'error', text: "Debes asignar un estacionamiento." });
         return;
       }
+      
       setShowModal(true);
     };
+
+  const uploadAvatarToSupabase = async (file: File): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `avatar_playero_${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars') 
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error subiendo foto:', error);
+      throw new Error("No se pudo subir la foto de perfil.");
+    }
+  };
 
   const handleConfirmSave = async () => {
     setShowModal(false);
@@ -98,14 +190,27 @@ function CrearEditarPlayeroContent() {
     if (!token) return;
 
     try {
+      let finalAvatarUrl = form.avatarUrl;
+
+      if (selectedFile) {
+        const uploadedUrl = await uploadAvatarToSupabase(selectedFile);
+        if (uploadedUrl) {
+            finalAvatarUrl = uploadedUrl;
+        }
+      }
+
       const payload: any = {
         dni: Number(form.dni),
         nombre: form.nombre,
         apellido: form.apellido,
-        rol: "Playero", // Siempre enviamos "Playero"
-        estacionamientoId: Number(form.estacionamientoId), // Siempre obligatorio
+        email: form.email,            
+        telefono: form.telefono,      
+        direccion: form.direccion,    
+        rol: "Playero",
+        estacionamientoId: Number(form.estacionamientoId),
         activo: form.activo,
-        password: form.password || undefined
+        password: form.password || undefined,
+        avatarUrl: finalAvatarUrl
       };
 
       if (idToEdit) {
@@ -129,20 +234,55 @@ function CrearEditarPlayeroContent() {
   const InputStyle = "w-full rounded-lg border shadow-sm p-3 border-gray-300 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none dark:text-white";
   const LabelStyle = "block text-sm font-medium text-gray-700 dark:text-neutral-400 mb-1";
 
-  return (
+return (
     <RoleGuard allowedRoles={["Dueño"]}>
     <AppSidebar>
-      <div className="flex-1 w-full h-full overflow-hidden bg-white dark:bg-neutral-900">
-        <div className="w-full h-full overflow-y-auto p-4 md:p-10">
-          <div className="max-w-2xl mx-auto mt-10">
-            <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-6">
+      <div className="flex-1 w-full h-full overflow-y-auto p-4 md:px-10 md:py-6 bg-white dark:bg-neutral-900">
+          
+          <div className="max-w-2xl mx-auto mt-2">
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-6">
               {idToEdit ? "Editar Playero" : "Nuevo Playero"}
-            </h2>
+            </h1>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               
-              {/* --- CAMPOS DEL FORMULARIO --- */}
-              <div className="bg-white dark:bg-neutral-800/50 p-6 rounded-xl border border-gray-200 dark:border-neutral-700 space-y-6">
+              <div className="bg-white dark:bg-neutral-800/50 p-6 rounded-xl border border-gray-200 dark:border-neutral-700 space-y-8"> 
+                
+                {/* --- SECCIÓN FOTO DE PERFIL --- */}
+                <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6 pb-6 border-b border-gray-200 dark:border-neutral-700">
+                  <div className="relative group cursor-pointer" onClick={triggerFileInput}>
+                    <div className="w-28 h-28 md:w-42 md:h-42 rounded-full overflow-hidden border-4 border-white dark:border-neutral-800 shadow-lg relative bg-gray-100 dark:bg-neutral-700 flex items-center justify-center">
+                      {previewUrl ? (
+                        <Image src={previewUrl} alt="Avatar" fill className="object-cover" sizes="128px" />
+                      ) : (
+                        <IconUser className="w-16 h-16 text-gray-400 dark:text-neutral-500" />
+                      )}
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white">
+                        <IconCamera className="w-6 h-6 mb-1" />
+                        <span className="text-xs font-medium">Cambiar</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex-1 text-center sm:text-left">
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-1">Foto de perfil</h3>
+                    <p className="text-sm text-gray-500 dark:text-neutral-400 mb-4">
+                      Tamaño recomendado de imagen: 256x256px.
+                    </p>
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      onChange={handleFileChange} 
+                      accept="image/*" 
+                      className="hidden" 
+                    />
+                    {selectedFile && (
+                      <p className="mt-2 text-xs text-green-600 dark:text-green-400 flex justify-center sm:justify-start items-center gap-1">
+                        <IconCheck size={14} /> Foto de perfil cargada.
+                      </p>
+                    )}
+                  </div>
+                </div>
                 
                 {/* FILA 1: DNI */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -158,23 +298,46 @@ function CrearEditarPlayeroContent() {
                     <label className={LabelStyle}>Apellido</label>
                     <input type="text" name="apellido" value={form.apellido} onChange={handleChange} className={InputStyle} />
                   </div>
-                  
                   <div>
                     <label className={LabelStyle}>Nombre</label>
                     <input type="text" name="nombre" value={form.nombre} onChange={handleChange} className={InputStyle} />
                   </div>
                 </div>
 
-                  {/* SELECTOR DE ESTACIONAMIENTO */}
-                  <div>
-                    <label className={LabelStyle}>Asignar a Estacionamiento</label>
-                    <select name="estacionamientoId" value={form.estacionamientoId} onChange={handleChange} className={InputStyle}>
-                      <option value="">-- Seleccionar --</option>
-                      {estacionamientos.map(est => (
-                        <option key={est.id} value={est.id}>{est.nombre}</option>
-                      ))}
-                    </select>
+                {/* FILA 3 - EMAIL Y TELÉFONO */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <div>
+                    <label className={LabelStyle}>Correo Electrónico</label>
+                    <input type="email" name="email" placeholder="ejemplo@correo.com" value={form.email} onChange={handleChange} className={InputStyle} />
                   </div>
+                  <div>
+                    <label className={LabelStyle}>Teléfono</label>
+                    <input type="text" name="telefono" placeholder="+54 370 4123456" value={form.telefono} onChange={handleChange} className={InputStyle} />
+                  </div>
+                </div>
+
+                {/* FILA 4 - DIRECCIÓN */}
+                <div>
+                  <label className={LabelStyle}>Dirección Completa</label>
+                  <input type="text" name="direccion" placeholder="Calle, Número, Localidad..." value={form.direccion} onChange={handleChange} className={InputStyle} />
+                </div>
+
+                {/* SELECTOR DE ESTACIONAMIENTO */}
+                <div>
+                  <label className={LabelStyle}>Asignar a Estacionamiento</label>
+                  <select 
+                    name="estacionamientoId" 
+                    value={form.estacionamientoId} 
+                    onChange={handleChange} 
+                    className={InputStyle}
+                    disabled={!!idToEdit || (typeof window !== "undefined" && !!localStorage.getItem("selectedEstId"))}
+                  >
+                    <option value="">-- Seleccionar --</option>
+                    {estacionamientos.map(est => (
+                      <option key={est.id} value={est.id}>{est.nombre}</option>
+                    ))}
+                  </select>
+                </div>
 
                 <div>
                   <label className={LabelStyle}>Contraseña {idToEdit && "(Dejar vacía para no cambiar)"}</label>
@@ -207,7 +370,7 @@ function CrearEditarPlayeroContent() {
                 
                 {/* BOTONES */}
                 <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
-                    {/* Botón GUARDAR (Azul) */}
+                    {/* Botón GUARDAR */}
                     <button 
                         type="submit"
                         disabled={saving}
@@ -220,7 +383,7 @@ function CrearEditarPlayeroContent() {
                         </span>
                     </button>
 
-                    {/* Botón CANCELAR (Rojo) */}
+                    {/* Botón CANCELAR */}
                     <button 
                         type="button" 
                         onClick={() => router.push("/playeros")} 
@@ -233,7 +396,7 @@ function CrearEditarPlayeroContent() {
                     </button>
                 </div>
 
-                {/* ALERTAS CON ANIMACIÓN Y ESTILOS DE COLOR */}
+                {/* ALERTAS */}
                 <AnimatePresence mode="wait">
                     {alerta && (
                         <motion.div
@@ -267,7 +430,6 @@ function CrearEditarPlayeroContent() {
             </form>
           </div>
         </div>
-      </div>
 
       {/* --- MODAL DE CONFIRMACIÓN --- */}
       {showModal && (
@@ -275,7 +437,6 @@ function CrearEditarPlayeroContent() {
           <div className="relative w-full max-w-md rounded-2xl p-2 bg-yellow-400 shadow-2xl animate-in fade-in zoom-in duration-300">
             <div className="bg-white dark:bg-black rounded-[14px] w-full h-full p-8 flex flex-col items-center text-center">
                 
-                {/* ÍCONO CON EFECTO GLOW */}
                 <div className="mb-6 relative">
                     <div className="absolute inset-0 bg-yellow-500/20 blur-xl rounded-full"></div>
                     <IconAlertTriangle className="h-20 w-20 text-yellow-500 relative z-10" />
@@ -291,7 +452,6 @@ function CrearEditarPlayeroContent() {
 
                 <div className="flex flex-col md:flex-row gap-4 w-full justify-center">
                     
-                    {/* BOTÓN ACEPTAR */}
                     <button 
                         type="button" 
                         onClick={handleConfirmSave}
@@ -303,7 +463,6 @@ function CrearEditarPlayeroContent() {
                         </span>
                     </button>
 
-                    {/* BOTÓN CANCELAR */}
                     <button 
                         type="button" 
                         onClick={() => setShowModal(false)} 
