@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AppSidebar } from "@/components/AppSidebar"; 
 import AvatarUpload from "@/components/AvatarUpload"; 
 import { supabase } from "@/lib/supabase"; 
+import Image from "next/image";
 
 // Iconos
 import { 
@@ -40,6 +41,9 @@ export default function PerfilPage() {
   // Modal y Acción (Guardar o Borrar)
   const [showModal, setShowModal] = useState(false);
   const [modalAction, setModalAction] = useState<'save_profile' | 'delete_avatar' | null>(null);
+
+  // ESTADO para saber si la foto de perfil está expandida (Lightbox)
+  const [isAvatarExpanded, setIsAvatarExpanded] = useState(false);
 
   // Helper para alertas
   const handleShowAlert = (type: 'success' | 'error', text: string) => {
@@ -147,6 +151,13 @@ export default function PerfilPage() {
     setShowModal(true);
   };
 
+  // Handler para cuando el usuario hace clic en su foto actual
+  const handleAvatarClick = () => {
+      if (usuario?.avatarUrl) {
+          setIsAvatarExpanded(true);
+      }
+  };
+
   // --- EJECUCIÓN (CONFIRMACIÓN MODAL) ---
   const handleConfirmAction = async () => {
     setShowModal(false);
@@ -214,9 +225,9 @@ export default function PerfilPage() {
 
   return (
     <AppSidebar>
-      <div className="flex-1 w-full h-full overflow-hidden bg-white dark:bg-neutral-900">
+      <div className="flex-1 w-full h-full overflow-hidden bg-white dark:bg-neutral-900 relative">
         
-        <div className="w-full h-full overflow-y-auto p-4 md:p-10 relative bg-white dark:bg-neutral-900">
+        <div className="w-full h-full overflow-y-auto p-4 md:p-10 bg-white dark:bg-neutral-900">
             
             <div className="max-w-5xl mx-auto mt-4 md:mt-10"> 
                 
@@ -418,6 +429,8 @@ export default function PerfilPage() {
                                     onAvatarUpdate={handleAvatarUpdate}
                                     onShowAlert={handleShowAlert}
                                     onRequestDelete={handleRequestDeleteAvatar}
+                                    // Pasamos la función que se ejecutará al hacer clic en la foto
+                                    onAvatarClick={handleAvatarClick} 
                                 />
                             )}
                         </div>
@@ -425,6 +438,38 @@ export default function PerfilPage() {
                 </div>
             </div>
         </div>
+
+        {/* --- MODAL PARA IMAGEN EXPANDIDA (LIGHTBOX) --- */}
+        {isAvatarExpanded && usuario?.avatarUrl && (
+            <div 
+                className="fixed inset-0 z-[110] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in zoom-in-95 duration-200 cursor-zoom-out"
+                onClick={() => setIsAvatarExpanded(false)}
+            >
+                {/* Botón de cerrar superior */}
+                <button 
+                    className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+                    onClick={(e) => {
+                        e.stopPropagation(); // Evita que se dispare el onClick del fondo
+                        setIsAvatarExpanded(false);
+                    }}
+                >
+                    <IconX size={28} />
+                </button>
+                
+                {/* Contenedor de la imagen grande */}
+                <div className="relative w-full max-w-2xl aspect-square md:aspect-auto md:h-[80vh] flex items-center justify-center">
+                    <Image 
+                        src={usuario.avatarUrl} 
+                        alt={usuario.nombre || "Avatar"} 
+                        fill 
+                        className="object-contain drop-shadow-2xl rounded-lg"
+                        sizes="(max-width: 768px) 100vw, 80vw"
+                        priority
+                    />
+                </div>
+            </div>
+        )}
+
       </div>
 
       {/* --- MODAL DE CONFIRMACIÓN --- */}

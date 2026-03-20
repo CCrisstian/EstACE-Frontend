@@ -36,6 +36,9 @@ export default function PlayerosListPage() {
 
   // Estado para el Playero seleccionado (Modal)
   const [selectedPlayero, setSelectedPlayero] = useState<Playero | null>(null);
+  
+  // ESTADO para saber si la foto de perfil está expandida
+  const [isAvatarExpanded, setIsAvatarExpanded] = useState(false);
 
   // Estados para el ordenamiento
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'asc' | 'desc' } | null>(null);
@@ -131,6 +134,12 @@ export default function PlayerosListPage() {
         </div>
       </th>
     );
+  };
+
+  // Función para cerrar el modal principal y resetear el estado de la imagen
+  const handleCloseModal = () => {
+      setSelectedPlayero(null);
+      setIsAvatarExpanded(false);
   };
 
   return (
@@ -278,7 +287,7 @@ export default function PlayerosListPage() {
                            <IconUser className="text-blue-500" /> Perfil de Playero
                         </h3>
                         <button 
-                            onClick={() => setSelectedPlayero(null)}
+                            onClick={handleCloseModal}
                             className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 text-gray-500 transition-colors"
                         >
                             <IconX size={22} />
@@ -289,7 +298,11 @@ export default function PlayerosListPage() {
                     <div className="p-6 flex flex-col items-center">
                         
                         {/* Foto de Perfil Grande */}
-                        <div className="h-28 w-28 relative rounded-full overflow-hidden border-4 border-gray-50 dark:border-neutral-800 shadow-md mb-4 bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                        <div 
+                            className={`h-28 w-28 relative rounded-full overflow-hidden border-4 border-gray-50 dark:border-neutral-800 shadow-md mb-4 bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center transition-transform ${selectedPlayero.avatarUrl ? 'cursor-pointer hover:scale-105 hover:shadow-lg' : ''}`}
+                            onClick={() => selectedPlayero.avatarUrl && setIsAvatarExpanded(true)}
+                            title={selectedPlayero.avatarUrl ? "Clic para ver en grande" : ""}
+                        >
                             {selectedPlayero.avatarUrl ? (
                                 <Image 
                                     src={selectedPlayero.avatarUrl} 
@@ -352,6 +365,37 @@ export default function PlayerosListPage() {
                         </div>
 
                     </div>
+                </div>
+            </div>
+        )}
+
+        {/* --- MODAL PARA IMAGEN EXPANDIDA (LIGHTBOX) --- */}
+        {isAvatarExpanded && selectedPlayero?.avatarUrl && (
+            <div 
+                className="fixed inset-0 z-[110] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in zoom-in-95 duration-200 cursor-zoom-out"
+                onClick={() => setIsAvatarExpanded(false)}
+            >
+                {/* Botón de cerrar superior */}
+                <button 
+                    className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+                    onClick={(e) => {
+                        e.stopPropagation(); // Evita que se dispare el onClick del fondo
+                        setIsAvatarExpanded(false);
+                    }}
+                >
+                    <IconX size={28} />
+                </button>
+                
+                {/* Contenedor de la imagen grande */}
+                <div className="relative w-full max-w-2xl aspect-square md:aspect-auto md:h-[80vh] flex items-center justify-center">
+                    <Image 
+                        src={selectedPlayero.avatarUrl} 
+                        alt={selectedPlayero.nombre} 
+                        fill 
+                        className="object-contain drop-shadow-2xl rounded-lg"
+                        sizes="(max-width: 768px) 100vw, 80vw"
+                        priority
+                    />
                 </div>
             </div>
         )}
