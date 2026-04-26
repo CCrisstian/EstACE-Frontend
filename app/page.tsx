@@ -10,16 +10,18 @@ import {
   IconChevronRight, 
   IconHistory, 
   IconCode, 
-  IconUserScan 
+  IconUserScan,
+  IconListCheck
 } from "@tabler/icons-react";
 
+// JERARQUÍA Y COLORES
 const carouselCards = [
   {
     id: 1,
-    title: "Historia del Proyecto",
-    description: "Conoce el origen de A.C.E., desde su nacimiento académico en la UTN hasta su evolución tecnológica actual.",
-    icon: <IconHistory className="w-24 h-24 text-blue-400 mb-6" />,
-    href: "/historia", 
+    title: "Funcionalidades",
+    description: "Descubre en detalle las capacidades del sistema: gestión del estacionamiento, cálculo de tarifas y reportes.",
+    icon: <IconListCheck className="w-24 h-24 text-blue-400 mb-6" />,
+    href: "/funcionalidades", 
     glowColor: "via-blue-500",
     bgGlow: "to-blue-500/15",
     hoverText: "group-hover:text-blue-400"
@@ -43,6 +45,16 @@ const carouselCards = [
     glowColor: "via-purple-500",
     bgGlow: "to-purple-500/15",
     hoverText: "group-hover:text-purple-400"
+  },
+  {
+    id: 4,
+    title: "Historia del Proyecto",
+    description: "Conoce el origen de A.C.E., desde su nacimiento académico en la UTN hasta su evolución tecnológica actual.",
+    icon: <IconHistory className="w-24 h-24 text-orange-400 mb-6" />,
+    href: "/historia", 
+    glowColor: "via-orange-500",
+    bgGlow: "to-orange-500/15",
+    hoverText: "group-hover:text-orange-400"
   }
 ];
 
@@ -88,7 +100,6 @@ export default function Home() {
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.5 }}>
             <Link href="/login">
-              {/* Botón de Login (Mantiene el HoverBorderGradient original) */}
               <HoverBorderGradient containerClassName="rounded-lg p-[2px]" as="button" className="bg-black text-white flex items-center space-x-2 border-2 border-neutral-800">
                 <span className="font-semibold px-4 py-1">Login</span>
               </HoverBorderGradient>
@@ -116,7 +127,7 @@ export default function Home() {
                   {/* Iluminación interna */}
                   <div className={`absolute inset-0 bg-gradient-to-br from-transparent via-transparent ${carouselCards[currentIndex].bgGlow} opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`} />
                   
-                  {/* Bordes animados con el color EXACTO de la tarjeta*/}
+                  {/* Bordes animados */}
                   <span className={`absolute inset-x-0 -bottom-px z-20 block h-[6px] w-full bg-gradient-to-r from-transparent ${carouselCards[currentIndex].glowColor} to-transparent opacity-0 transition duration-500 group-hover:opacity-100`} />
                   <span className={`absolute inset-x-10 -bottom-px z-20 mx-auto block h-[6px] w-1/2 bg-gradient-to-r from-transparent ${carouselCards[currentIndex].glowColor} to-transparent opacity-0 blur-sm transition duration-500 group-hover:opacity-100`} />
                   

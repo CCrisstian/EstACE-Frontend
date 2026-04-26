@@ -91,7 +91,6 @@ export default function HerramientaPage() {
   const scrollTo = (id: string, ref: any) => {
     setActive(id);
     isClickScrolling.current = true;
-    // CAMBIO: Usamos block: "start" para ir al inicio real de la sección
     ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     setTimeout(() => { isClickScrolling.current = false; }, 1000);
   };
