@@ -52,13 +52,6 @@ export default function Footer() {
             <IconBrandLinkedin size={30} stroke={1.5} />
           </a>
 
-          <a 
-            href="mailto:crisstiann.c@gmail.com" 
-            className="text-neutral-400 hover:text-red-400 hover:scale-110 transition-all"
-            aria-label="Email"
-          >
-            <IconMail size={30} stroke={1.5} />
-          </a>
         </div>
 
       </div>
