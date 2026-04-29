@@ -1,23 +1,31 @@
-// app/layout.tsx
+import "@/app/globals.css";
 
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
+import Footer from "@/components/Footer"; 
 
-const inter = Inter({ subsets: ["latin"] });
-
-export const metadata: Metadata = {
-  title: "ACE V2.0",
+export const metadata = {
+  title: "A.C.E. V2.0",
+  description: "Portafolio Backend",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="es">
-      <body className={inter.className}>{children}</body>
+      {/* Agregamos flex y flex-col al body para asegurar que el footer siempre quede abajo */}
+      <body className="min-h-screen flex flex-col bg-black">
+        
+        {/* El contenido de las páginas (page.tsx) */}
+        <main className="flex-grow">
+          {children}
+        </main>
+
+        {/* 2. Footer globalmente */}
+        <Footer />
+        
+      </body>
     </html>
   );
 }
