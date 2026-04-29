@@ -1,8 +1,21 @@
+"use client"; // Necesario para poder leer la ruta actual del navegador
+
+import { usePathname } from "next/navigation";
 import { IconBrandGithub, IconBrandLinkedin, IconMail } from "@tabler/icons-react";
 
 export default function Footer() {
+  const pathname = usePathname();
   const currentYear = new Date().getFullYear();
 
+  // 1. Definimos exactamente en qué páginas queremos que aparezca el Footer
+  const allowedRoutes = ["/", "/funcionalidades", "/herramientas", "/historia"];
+
+  // 2. Si la ruta actual NO está en esa lista, devolvemos 'null' (el componente se oculta)
+  if (!allowedRoutes.includes(pathname)) {
+    return null;
+  }
+
+  // 3. Si la ruta SÍ está permitida, renderizamos el Footer normalmente
   return (
     <footer className="w-full border-t border-neutral-800 bg-black py-8 px-6 mt-auto relative z-50">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
@@ -19,7 +32,6 @@ export default function Footer() {
 
         {/* Enlaces y Redes */}
         <div className="flex items-center gap-5">
-          {/* GitHub */}
           <a 
             href="https://github.com/CCrisstian" 
             target="_blank" 
@@ -30,7 +42,6 @@ export default function Footer() {
             <IconBrandGithub size={30} stroke={1.5} />
           </a>
           
-          {/* LinkedIn (Recuerda cambiar el enlace por el tuyo real) */}
           <a 
             href="https://www.linkedin.com/in/cristian-alejandro-cristaldo/" 
             target="_blank" 
@@ -41,7 +52,6 @@ export default function Footer() {
             <IconBrandLinkedin size={30} stroke={1.5} />
           </a>
 
-          {/* Email */}
           <a 
             href="mailto:crisstiann.c@gmail.com" 
             className="text-neutral-400 hover:text-red-400 hover:scale-110 transition-all"
