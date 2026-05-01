@@ -84,17 +84,17 @@ export default function AvatarUpload({
     <div className="flex flex-col items-center gap-4 w-full">
         
         {/* Contenedor relativo que agrupa la foto y los botones */}
-        <div className="relative w-40 h-40">
+        <div className="relative w-64 h-64 lg:w-72 lg:h-72">
             
             {/* Foto actual */}
             <div 
-                className={`relative w-full h-full rounded-full overflow-hidden border-4 border-white dark:border-neutral-800 shadow-lg ${currentAvatarUrl ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`}
+                className={`relative w-full h-full rounded-full overflow-hidden border-[6px] border-white dark:border-neutral-800 shadow-xl bg-gray-100 dark:bg-neutral-800 ${currentAvatarUrl ? 'cursor-pointer hover:scale-105 transition-transform duration-300' : ''}`}
                 onClick={onAvatarClick} 
                 title={currentAvatarUrl ? "Clic para ver en grande" : ""}
             >
                 {uploading ? (
-                    <div className="w-full h-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center">
-                        <IconLoader2 className="animate-spin text-blue-500" size={30} />
+                    <div className="w-full h-full flex items-center justify-center">
+                        <IconLoader2 className="animate-spin text-blue-500" size={48} />
                     </div>
                 ) : preview || currentAvatarUrl ? (
                     <Image
@@ -102,32 +102,32 @@ export default function AvatarUpload({
                         alt="Avatar"
                         fill
                         className="object-cover"
-                        sizes="160px"
+                        sizes="(max-width: 1024px) 256px, 288px"
                         unoptimized={!!preview}
                     />
                 ) : (
-                    <div className="w-full h-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center">
-                        <IconUser className="h-16 w-16 text-gray-400" />
+                    <div className="w-full h-full flex items-center justify-center">
+                        <IconUser className="h-32 w-32 text-gray-400" />
                     </div>
                 )}
             </div>
             
-            {/* Botón CAMBIAR */}
-            <label className="absolute bottom-0 right-0 bg-blue-600 p-3 rounded-full text-white cursor-pointer hover:bg-blue-700 transition shadow-lg z-20 hover:scale-105 active:scale-95">
-                <IconCamera size={22} />
+            {/* Botón CAMBIAR (Cámara) */}
+            <label className="absolute bottom-2 right-2 lg:bottom-4 lg:right-4 bg-blue-600 p-4 rounded-full text-white cursor-pointer hover:bg-blue-700 transition-all shadow-xl z-20 hover:scale-110 active:scale-95 border-4 border-white dark:border-neutral-900">
+                <IconCamera size={28} />
                 <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} disabled={uploading} />
             </label>
 
-            {/* Botón BORRAR */}
+            {/* Botón BORRAR (Basura) */}
             {preview && (
                 <button 
                     onClick={onRequestDelete}
                     disabled={uploading}
                     type="button"
-                    className="absolute top-0 right-0 bg-red-500 p-2 rounded-full text-white cursor-pointer hover:bg-red-600 transition shadow-lg z-20 hover:scale-105 active:scale-95 border-2 border-white dark:border-neutral-900"
+                    className="absolute top-2 right-2 lg:top-4 lg:right-4 bg-red-500 p-3 rounded-full text-white cursor-pointer hover:bg-red-600 transition-all shadow-xl z-20 hover:scale-110 active:scale-95 border-4 border-white dark:border-neutral-900"
                     title="Eliminar foto"
                 >
-                    <IconTrash size={18} />
+                    <IconTrash size={24} />
                 </button>
             )}
             

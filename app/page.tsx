@@ -69,6 +69,19 @@ export default function Home() {
     setCurrentIndex((prev) => (prev === 0 ? carouselCards.length - 1 : prev - 1));
   };
 
+  // --- FUNCIÓN PARA MÓVILES ---
+  const handleDragEnd = (event: any, info: any) => {
+    const swipeThreshold = 50; // Píxeles mínimos que debe deslizar para que cambie la tarjeta
+    
+    if (info.offset.x < -swipeThreshold) {
+      // Si desliza hacia la izquierda (negativo), avanza
+      nextCard();
+    } else if (info.offset.x > swipeThreshold) {
+      // Si desliza hacia la derecha (positivo), retrocede
+      prevCard();
+    }
+  };
+
   return (
     <div className="relative min-h-screen w-full bg-neutral-50 dark:bg-black overflow-hidden flex flex-col lg:flex-row">
       
@@ -111,17 +124,22 @@ export default function Home() {
       {/* --- SECCIÓN DERECHA --- */}
       <div className="w-full lg:w-1/2 min-h-[50vh] lg:min-h-screen flex flex-col items-center justify-center relative order-2 p-6 z-10 bg-neutral-100/50 dark:bg-black">
         <div style={{ perspective: "1200px" }} className="relative w-full max-w-sm h-[460px] flex items-center justify-center">
-          <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait">
             <motion.div
               key={currentIndex}
               initial={{ opacity: 0, rotateY: 20, scale: 0.9 }}
               animate={{ opacity: 1, rotateY: 0, scale: 1, y: [0, -12, 0] }}
               exit={{ opacity: 0, rotateY: -20, scale: 0.9 }}
               transition={{ duration: 0.5, y: { duration: 5, repeat: Infinity, ease: "easeInOut" } }}
-              className="absolute w-full h-full"
+              className="absolute w-full h-full cursor-grab active:cursor-grabbing"
+              
+              // --- NUEVAS PROPIEDADES PARA SWIPE ---
+              drag="x" // Solo permite arrastrar en el eje horizontal (izquierda/derecha)
+              dragConstraints={{ left: 0, right: 0 }} // Hace que la tarjeta "vuelva" a su lugar original como un resorte
+              dragElastic={0.2} // Le da un efecto de resistencia física al arrastrar
+              onDragEnd={handleDragEnd} // Ejecuta la función que evalúa hacia dónde fue el swipe
             >
               <Link href={carouselCards[currentIndex].href} className="block w-full h-full">
-                
                 <div className="w-full h-full rounded-[2.5rem] bg-neutral-900 border-2 border-neutral-800 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.7)] group overflow-hidden relative flex flex-col items-center justify-center text-center p-10 transition-all hover:border-transparent">
                   
                   {/* Iluminación interna */}

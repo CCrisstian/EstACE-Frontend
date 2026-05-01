@@ -279,7 +279,8 @@ export default function PlayerosListPage() {
         {/* --- MODAL DE DETALLES DEL PLAYERO --- */}
         {selectedPlayero && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                <div className="relative w-full max-w-md bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+                {/* CAMBIO 1: Ensanchamos el modal a max-w-3xl */}
+                <div className="relative w-full max-w-3xl bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
                     
                     {/* Header del Modal */}
                     <div className="flex justify-between items-center p-5 border-b border-gray-100 dark:border-neutral-800">
@@ -294,72 +295,78 @@ export default function PlayerosListPage() {
                         </button>
                     </div>
 
-                    {/* Cuerpo del Modal */}
-                    <div className="p-6 flex flex-col items-center">
+                    {/* Cuerpo del Modal - Distribución en dos columnas */}
+                    <div className="p-6 flex flex-col md:flex-row gap-8">
                         
-                        {/* Foto de Perfil Grande */}
-                        <div 
-                            className={`h-28 w-28 relative rounded-full overflow-hidden border-4 border-gray-50 dark:border-neutral-800 shadow-md mb-4 bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center transition-transform ${selectedPlayero.avatarUrl ? 'cursor-pointer hover:scale-105 hover:shadow-lg' : ''}`}
-                            onClick={() => selectedPlayero.avatarUrl && setIsAvatarExpanded(true)}
-                            title={selectedPlayero.avatarUrl ? "Clic para ver en grande" : ""}
-                        >
-                            {selectedPlayero.avatarUrl ? (
-                                <Image 
-                                    src={selectedPlayero.avatarUrl} 
-                                    alt={selectedPlayero.nombre} 
-                                    fill 
-                                    className="object-cover"
-                                    sizes="112px"
-                                />
-                            ) : (
-                                <span className="text-4xl font-bold text-blue-600 dark:text-blue-400 uppercase">
-                                    {selectedPlayero.nombre.charAt(0)}{selectedPlayero.apellido.charAt(0)}
-                                </span>
-                            )}
+                        {/* COLUMNA IZQUIERDA: Foto, Nombre y Estado */}
+                        <div className="w-full md:w-5/12 flex flex-col items-center justify-center">
+                            
+                            {/* Foto de Perfil */}
+                            <div 
+                                className={`h-52 w-52 md:h-64 md:w-64 relative rounded-full overflow-hidden border-4 border-gray-50 dark:border-neutral-800 shadow-lg mb-6 bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center transition-transform ${selectedPlayero.avatarUrl ? 'cursor-pointer hover:scale-105 hover:shadow-xl' : ''}`}
+                                onClick={() => selectedPlayero.avatarUrl && setIsAvatarExpanded(true)}
+                                title={selectedPlayero.avatarUrl ? "Clic para ver en grande" : ""}
+                            >
+                                {selectedPlayero.avatarUrl ? (
+                                    <Image 
+                                        src={selectedPlayero.avatarUrl} 
+                                        alt={selectedPlayero.nombre} 
+                                        fill 
+                                        className="object-cover"
+                                        sizes="(max-width: 768px) 208px, 256px"
+                                    />
+                                ) : (
+                                    <span className="text-5xl md:text-7xl font-bold text-blue-600 dark:text-blue-400 uppercase">
+                                        {selectedPlayero.nombre.charAt(0)}{selectedPlayero.apellido.charAt(0)}
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* Caja Inferior de Identidad */}
+                            <div className="bg-gray-100 dark:bg-[#1a1a1a] p-4 rounded-xl w-full text-center border border-gray-200 dark:border-neutral-800 shadow-sm">
+                                <h4 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white truncate">
+                                    {selectedPlayero.nombre} {selectedPlayero.apellido}
+                                </h4>
+                                <div className="mt-3">
+                                    {selectedPlayero.activo ? 
+                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800/50"><IconCircleCheck size={14}/> Playero Activo</span> :
+                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800/50"><IconXboxX size={14}/> Playero Inactivo</span>
+                                    }
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Nombre y Estado */}
-                        <h4 className="text-2xl font-bold text-gray-800 dark:text-white text-center">
-                            {selectedPlayero.nombre} {selectedPlayero.apellido}
-                        </h4>
-                        <div className="mt-2 mb-6">
-                            {selectedPlayero.activo ? 
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800/50"><IconCircleCheck size={14}/> Playero Activo</span> :
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800/50"><IconXboxX size={14}/> Playero Inactivo</span>
-                            }
-                        </div>
-
-                        {/* Grilla de Datos */}
-                        <div className="w-full space-y-3">
-                            <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-neutral-800/50 border border-gray-100 dark:border-neutral-800">
-                                <div className="bg-white dark:bg-neutral-700 p-2 rounded-md shadow-sm"><IconIdBadge2 size={18} className="text-blue-500" /></div>
+                        {/* COLUMNA DERECHA: Grilla de Datos */}
+                        <div className="w-full md:w-7/12 flex flex-col justify-center space-y-3">
+                            <div className="flex items-center gap-4 p-4 md:p-5 rounded-xl bg-gray-50 dark:bg-[#1f1f1f] border border-gray-100 dark:border-neutral-800 transition-colors hover:bg-gray-100 dark:hover:bg-neutral-800">
+                                <div className="bg-white dark:bg-neutral-700 p-2.5 rounded-lg shadow-sm"><IconIdBadge2 size={22} className="text-blue-500" /></div>
                                 <div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Legajo / DNI</p>
-                                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">N° {selectedPlayero.legajo} — {selectedPlayero.dni}</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mb-0.5">Legajo / DNI</p>
+                                    <p className="text-base font-semibold text-gray-800 dark:text-gray-200">N° {selectedPlayero.legajo} — {selectedPlayero.dni}</p>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-neutral-800/50 border border-gray-100 dark:border-neutral-800">
-                                <div className="bg-white dark:bg-neutral-700 p-2 rounded-md shadow-sm"><IconPhone size={18} className="text-green-500" /></div>
+                            <div className="flex items-center gap-4 p-4 md:p-5 rounded-xl bg-gray-50 dark:bg-[#1f1f1f] border border-gray-100 dark:border-neutral-800 transition-colors hover:bg-gray-100 dark:hover:bg-neutral-800">
+                                <div className="bg-white dark:bg-neutral-700 p-2.5 rounded-lg shadow-sm"><IconPhone size={22} className="text-green-500" /></div>
                                 <div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Teléfono</p>
-                                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">{selectedPlayero.telefono || "No registrado"}</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mb-0.5">Teléfono</p>
+                                    <p className="text-base font-semibold text-gray-800 dark:text-gray-200">{selectedPlayero.telefono || "No registrado"}</p>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-neutral-800/50 border border-gray-100 dark:border-neutral-800">
-                                <div className="bg-white dark:bg-neutral-700 p-2 rounded-md shadow-sm"><IconMail size={18} className="text-yellow-500" /></div>
+                            <div className="flex items-center gap-4 p-4 md:p-5 rounded-xl bg-gray-50 dark:bg-[#1f1f1f] border border-gray-100 dark:border-neutral-800 transition-colors hover:bg-gray-100 dark:hover:bg-neutral-800 overflow-hidden">
+                                <div className="bg-white dark:bg-neutral-700 p-2.5 rounded-lg shadow-sm flex-shrink-0"><IconMail size={22} className="text-yellow-500" /></div>
                                 <div className="overflow-hidden">
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Correo Electrónico</p>
-                                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{selectedPlayero.email || "No registrado"}</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mb-0.5">Correo Electrónico</p>
+                                    <p className="text-base font-semibold text-gray-800 dark:text-gray-200 truncate">{selectedPlayero.email || "No registrado"}</p>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-neutral-800/50 border border-gray-100 dark:border-neutral-800">
-                                <div className="bg-white dark:bg-neutral-700 p-2 rounded-md shadow-sm"><IconMapPin size={18} className="text-red-500" /></div>
+                            <div className="flex items-center gap-4 p-4 md:p-5 rounded-xl bg-gray-50 dark:bg-[#1f1f1f] border border-gray-100 dark:border-neutral-800 transition-colors hover:bg-gray-100 dark:hover:bg-neutral-800">
+                                <div className="bg-white dark:bg-neutral-700 p-2.5 rounded-lg shadow-sm"><IconMapPin size={22} className="text-red-500" /></div>
                                 <div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Dirección</p>
-                                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">{selectedPlayero.direccion || "No registrada"}</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mb-0.5">Dirección</p>
+                                    <p className="text-base font-semibold text-gray-800 dark:text-gray-200">{selectedPlayero.direccion || "No registrada"}</p>
                                 </div>
                             </div>
                         </div>

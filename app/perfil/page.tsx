@@ -247,12 +247,12 @@ export default function PerfilPage() {
                     </div>
                     <p className="text-gray-500 dark:text-gray-400 mt-1">Administra tu información personal.</p>
                 </div>
-
+                
                 {/* GRID LAYOUT (Formulario Izquierda / Foto Derecha) */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mt-4">
                     
                     {/* COLUMNA 1: FORMULARIO */}
-                    <div className="lg:col-span-2 order-2 lg:order-1">
+                    <div className="order-2 lg:order-1">
                         
                         <AnimatePresence mode="wait">
                             {alerta && (
@@ -262,7 +262,7 @@ export default function PerfilPage() {
                                     exit={{ opacity: 0, y: -20, scale: 0.95 }}
                                     transition={{ duration: 0.2 }}
                                     className={cn(
-                                        "p-4 rounded-lg flex items-start gap-3 shadow-sm border mb-6",
+                                        "p-4 rounded-lg flex items-start gap-3 shadow-sm border mb-6 max-w-md",
                                         alerta.type === 'success' 
                                             ? "bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300" 
                                             : "bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300"
@@ -275,7 +275,7 @@ export default function PerfilPage() {
                             )}
                         </AnimatePresence>
         
-                        <form onSubmit={handleSubmit} className="space-y-5 max-w-xl">
+                        <form onSubmit={handleSubmit} className="space-y-5 max-w-md">
                             
                             {/* Legajo y DNI*/}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -414,12 +414,13 @@ export default function PerfilPage() {
                             )}
                         </form>
                     </div>
-
+                    
                     {/* COLUMNA 2: FOTO DE PERFIL */}
-                    <div className="lg:col-span-1 order-1 lg:order-2 flex flex-col items-center justify-center w-full">
-                        <div className="bg-white dark:bg-neutral-800/30 p-8 rounded-2xl border border-dashed border-gray-300 dark:border-neutral-700 flex flex-col items-center gap-6 w-full max-w-sm">
+                    <div className="lg:col-span-1 order-1 lg:order-2 flex flex-col items-center lg:items-start justify-start w-full">
+                        {/* Cambiamos w-full y max-w-lg por w-fit, y ajustamos el padding para que abrace la foto */}
+                        <div className="bg-white dark:bg-neutral-800/20 p-6 lg:p-8 rounded-[2rem] border border-dashed border-gray-300 dark:border-neutral-700 flex flex-col items-center gap-6 w-fit shadow-sm mx-auto lg:mx-0">
                             <div className="text-center">
-                                <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Foto de Perfil</h3>
+                                <h3 className="text-2xl font-bold text-gray-800 dark:text-white">Foto de Perfil</h3>
                             </div>
                             
                             {usuario && (
@@ -429,13 +430,14 @@ export default function PerfilPage() {
                                     onAvatarUpdate={handleAvatarUpdate}
                                     onShowAlert={handleShowAlert}
                                     onRequestDelete={handleRequestDeleteAvatar}
-                                    // Pasamos la función que se ejecutará al hacer clic en la foto
                                     onAvatarClick={handleAvatarClick} 
                                 />
                             )}
                         </div>
                     </div>
+                    
                 </div>
+
             </div>
         </div>
 
