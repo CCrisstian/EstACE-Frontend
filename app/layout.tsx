@@ -1,6 +1,7 @@
 import "@/app/globals.css";
-
 import Footer from "@/components/Footer"; 
+import { ThemeProvider } from "@/components/ThemeProvider"; 
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const metadata = {
   title: "A.C.E. V2.0",
@@ -13,18 +14,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es">
-      {/* Agregamos flex y flex-col al body para asegurar que el footer siempre quede abajo */}
-      <body className="min-h-screen flex flex-col bg-black">
-        
-        {/* El contenido de las páginas (page.tsx) */}
-        <main className="flex-grow">
-          {children}
-        </main>
+    <html lang="es" suppressHydrationWarning>
+      {/* Agregamos las clases de flex, colores base globales y la transición */}
+      <body className="flex flex-col min-h-screen bg-[#F9F5F0] dark:bg-black transition-colors duration-500">
 
-        {/* 2. Footer globalmente */}
-        <Footer />
+        {/* Agregamos enableSystem={false} para que obedezca siempre al botón */}
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
         
+          {/* El contenido de las páginas (page.tsx) */}
+          <main className="flex-grow">
+            {children}
+          </main>
+
+          {/* Footer globalmente */}
+          <Footer />
+          
+          <ThemeToggle /> {/* El botón vivirá aquí globalmente */}
+        </ThemeProvider>
       </body>
     </html>
   );

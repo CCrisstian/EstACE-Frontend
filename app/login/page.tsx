@@ -8,10 +8,12 @@ import { useRouter } from "next/navigation";
 import { loginUsuario } from "@/services/authService";
 import { IconEye, IconEyeOff } from "@tabler/icons-react";
 import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
-import Link from "next/link"; // Importamos Link
+import Link from "next/link"; 
+import { useTheme } from "next-themes";
+import { motion, useMotionTemplate, useMotionValue } from "framer-motion";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState(""); // <-- Cambiado a email
+  const [email, setEmail] = useState(""); 
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isVisible, setIsVisible] = useState(false);
@@ -22,7 +24,6 @@ export default function LoginPage() {
     setError("");
 
     try {
-      // Enviamos el email a la API
       const data = await loginUsuario({ email, password });
       
       localStorage.setItem("token", data.token);
@@ -35,7 +36,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-black p-4">
+    <div className="flex min-h-screen items-center justify-center bg-[#F9F5F0] dark:bg-black p-4 transition-colors duration-500">
       
       <HoverBorderGradient
         containerClassName="rounded-2xl p-2"
@@ -66,16 +67,16 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              className="focus-visible:ring-[#22c55e] dark:focus-visible:ring-[#3275F8] focus-visible:shadow-[0_0_15px_rgba(34,197,94,0.3)] dark:focus-visible:shadow-[0_0_15px_rgba(50,117,248,0.3)] transition-all duration-300"
             />
           </LabelInputContainer>
           
           <LabelInputContainer className="mb-8">
-            {/* Flex container para poner el label y el link de recuperar contraseña en la misma línea */}
             <div className="flex justify-between items-center mb-1">
                 <Label htmlFor="password" className="mb-0">Contraseña</Label>
                 <Link 
                     href="/recuperar-password" 
-                    className="text-xs font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                    className="text-xs font-medium text-[#22c55e] hover:text-green-600 dark:text-[#3275F8] dark:hover:text-blue-400 transition-colors"
                 >
                     ¿Olvidaste tu contraseña?
                 </Link>
@@ -89,11 +90,11 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="pr-10" 
+                className="pr-10 focus-visible:ring-[#22c55e] dark:focus-visible:ring-[#3275F8] focus-visible:shadow-[0_0_15px_rgba(34,197,94,0.3)] dark:focus-visible:shadow-[0_0_15px_rgba(50,117,248,0.3)] transition-all duration-300" 
               />
               
               <button
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors"
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-neutral-600 dark:text-neutral-400 hover:text-[#22c55e] dark:hover:text-[#3275F8] transition-colors"
                 type="button" 
                 onClick={() => setIsVisible(!isVisible)}
               >
@@ -106,13 +107,10 @@ export default function LoginPage() {
             </div>
           </LabelInputContainer>
 
-          <button
-            className="group/btn relative block h-10 w-full rounded-md bg-gradient-to-br from-black to-neutral-600 font-medium text-white shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:bg-zinc-800 dark:from-zinc-900 dark:to-zinc-900 dark:shadow-[0px_1px_0px_0px_#27272a_inset,0px_-1px_0px_0px_#27272a_inset]"
-            type="submit"
-          >
+          {/* 🚨 Aquí usamos nuestro nuevo botón iluminado */}
+          <GlowButton type="submit">
             Iniciar Sesión
-            <BottomGradient />
-          </button>
+          </GlowButton>
 
           <div className="my-8 h-[1px] w-full bg-gradient-to-r from-transparent via-neutral-300 to-transparent dark:via-neutral-700" />
         </form>
@@ -121,11 +119,65 @@ export default function LoginPage() {
   );
 }
 
+// ----------------------------------------------------
+// COMPONENTE: Botón con luz interior
+// ----------------------------------------------------
+const GlowButton = ({ children, ...props }: any) => {
+  const radius = 250;
+  const [visible, setVisible] = React.useState(false);
+  const { theme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Color puro para máxima iluminación
+  const activeColor = mounted && theme === "light" ? "#22c55e" : "#3275F8";
+
+  let mouseX = useMotionValue(0);
+  let mouseY = useMotionValue(0);
+
+  function handleMouseMove({ currentTarget, clientX, clientY }: any) {
+    let { left, top } = currentTarget.getBoundingClientRect();
+    mouseX.set(clientX - left);
+    mouseY.set(clientY - top);
+  }
+
+  return (
+    <motion.div
+      style={{
+        background: useMotionTemplate`
+      radial-gradient(
+        ${visible ? radius + "px" : "0px"} circle at ${mouseX}px ${mouseY}px,
+        ${activeColor},
+        transparent 80%
+      )
+    `,
+      }}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setVisible(true)}
+      onMouseLeave={() => setVisible(false)}
+      // 🚨 Envoltorio sin fondo sólido
+      className="group/btn relative rounded-md p-[1px] transition duration-300"
+    >
+      <button
+        //  En modo claro pasa de bg-black a bg-black/50 para revelar la luz verde interior
+        className="relative flex h-10 w-full items-center justify-center rounded-md font-medium text-white transition-all duration-300 bg-black group-hover/btn:bg-black/50 dark:bg-zinc-900 dark:group-hover/btn:bg-zinc-900/50"
+        {...props}
+      >
+        {children}
+        <BottomGradient />
+      </button>
+    </motion.div>
+  );
+};
+
 const BottomGradient = () => {
   return (
     <>
-      <span className="absolute inset-x-0 -bottom-px block h-px w-full bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-0 transition duration-500 group-hover/btn:opacity-100" />
-      <span className="absolute inset-x-10 -bottom-px mx-auto block h-px w-1/2 bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-0 blur-sm transition duration-500 group-hover/btn:opacity-100" />
+      <span className="absolute inset-x-0 -bottom-px block h-px w-full bg-gradient-to-r from-transparent via-[#22c55e] dark:via-[#3275F8] to-transparent opacity-0 transition duration-500 group-hover/btn:opacity-100" />
+      <span className="absolute inset-x-10 -bottom-px mx-auto block h-px w-1/2 bg-gradient-to-r from-transparent via-[#22c55e] dark:via-[#3275F8] to-transparent opacity-0 blur-sm transition duration-500 group-hover/btn:opacity-100" />
     </>
   );
 };

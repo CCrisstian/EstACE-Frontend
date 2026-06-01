@@ -1,11 +1,15 @@
-"use client"; // Necesario para poder leer la ruta actual del navegador
+"use client";
 
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { IconBrandGithub, IconBrandLinkedin, IconMail } from "@tabler/icons-react";
 
 export default function Footer() {
   const pathname = usePathname();
   const currentYear = new Date().getFullYear();
+  
+  // Estado para controlar si el correo está visible o no
+  const [showEmail, setShowEmail] = useState(false);
 
   // 1. Definimos exactamente en qué páginas queremos que aparezca el Footer
   const allowedRoutes = ["/", "/funcionalidades", "/herramientas", "/historia"];
@@ -52,8 +56,31 @@ export default function Footer() {
             <IconBrandLinkedin size={30} stroke={1.5} />
           </a>
 
-        </div>
+          {/* Contenedor del Botón de Correo Interactivo */}
+          <div className="flex items-center">
+            <button 
+              onClick={() => setShowEmail(!showEmail)}
+              className={`text-neutral-400 hover:text-red-500 hover:scale-110 transition-all cursor-pointer ${showEmail ? 'text-red-500' : ''}`}
+              title="Mostrar correo"
+            >
+              <IconMail size={30} stroke={1.5} />
+            </button>
+            
+            {/* Texto del correo oculto por defecto, se revela al hacer clic */}
+            <div 
+              className={`transition-all duration-300 ease-in-out overflow-hidden flex items-center ${showEmail ? 'max-w-[250px] opacity-100 ml-3' : 'max-w-0 opacity-0'}`}
+            >
+              <a 
+                href="mailto:crisstiann.c@gmail.com" 
+                className="text-neutral-300 hover:text-white text-sm font-medium whitespace-nowrap"
+                title="Haga clic para enviar un correo"
+              >
+                crisstiann.c@gmail.com
+              </a>
+            </div>
+          </div>
 
+        </div>
       </div>
     </footer>
   );

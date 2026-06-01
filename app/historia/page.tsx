@@ -164,7 +164,7 @@ export default function HistoriaPage() {
           <h1 className="text-4xl md:text-6xl font-bold text-slate-900 dark:text-white mb-4">
             Historia del Proyecto
           </h1>
-          <p className="text-lg md:text-xl text-neutral-600 dark:text-neutral-400 font-light max-w-2xl">
+          <p className="text-lg md:text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl">
             El recorrido, los desafíos y la evolución que transformaron una idea académica en una solución tecnológica en la nube.
           </p>
         </div>

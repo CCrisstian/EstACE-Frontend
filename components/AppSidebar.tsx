@@ -31,8 +31,11 @@ import { UsuarioResponse } from "@/types/usuario.types";
 
 export const Logo = () => (
   <Link href="/dashboard" className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20">
-    <div className="h-8 w-8 relative overflow-hidden rounded-full flex-shrink-0">
-      <Image src="/LogoACE_SinFondo.png" alt="Logo EstACE" fill className="object-cover" />
+    <div className="h-8 w-10 relative flex-shrink-0">
+      {/* 🌙 Modo Oscuro */}
+      <Image src="/LogoACE_SinFondo.png" alt="Logo EstACE" fill sizes="40px" className="object-contain hidden dark:block" />
+      {/* ☀️ Modo Claro */}
+      <Image src="/LogoACE_SinFondo_Claro.png" alt="Logo EstACE" fill sizes="40px" className="object-contain block dark:hidden" />
     </div>
     <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-medium text-black dark:text-white whitespace-pre">
       EstACE V2
@@ -42,8 +45,11 @@ export const Logo = () => (
 
 export const LogoIcon = () => (
   <Link href="/dashboard" className="font-normal flex space-x-2 items-center text-sm text-black py-1 relative z-20">
-    <div className="h-8 w-8 relative overflow-hidden rounded-full flex-shrink-0">
-      <Image src="/LogoACE_SinFondo.png" alt="Logo EstACE" fill className="object-cover" />
+    <div className="h-8 w-10 relative flex-shrink-0">
+      {/* 🌙 Modo Oscuro */}
+      <Image src="/LogoACE_SinFondo.png" alt="Logo EstACE" fill sizes="40px" className="object-contain hidden dark:block" />
+      {/* ☀️ Modo Claro */}
+      <Image src="/LogoACE_SinFondo_Claro.png" alt="Logo EstACE" fill sizes="40px" className="object-contain block dark:hidden" />
     </div>
   </Link>
 );

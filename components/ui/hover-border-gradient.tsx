@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion"; 
 import { cn } from "@/lib/utils";
+import { useTheme } from "next-themes";
 
 type Direction = "TOP" | "LEFT" | "BOTTOM" | "RIGHT";
 
@@ -25,6 +26,17 @@ export function HoverBorderGradient({
   const [hovered, setHovered] = useState<boolean>(false);
   const [direction, setDirection] = useState<Direction>("TOP");
 
+  // 1. Lógica del Tema (Verde en claro, Azul en oscuro)
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+// Verde (#22c55e) en claro, Azul (#3275F8) en oscuro (por defecto)
+  const activeColor = mounted && theme === "light" ? "#22c55e" : "#3275F8";
+
   const rotateDirection = (currentDirection: Direction): Direction => {
     const directions: Direction[] = ["TOP", "LEFT", "BOTTOM", "RIGHT"];
     const currentIndex = directions.indexOf(currentDirection);
@@ -41,8 +53,7 @@ export function HoverBorderGradient({
     RIGHT: "radial-gradient(16.2% 41.199999999999996% at 100% 50%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0) 100%)",
   };
 
-  const highlight =
-    "radial-gradient(75% 181.15942028985506% at 50% 50%, #3275F8 0%, rgba(255, 255, 255, 0) 100%)";
+  const highlight = `radial-gradient(75% 181.15942028985506% at 50% 50%, ${activeColor} 0%, rgba(255, 255, 255, 0) 100%)`;
 
   useEffect(() => {
     if (!hovered) {
@@ -51,7 +62,7 @@ export function HoverBorderGradient({
       }, duration * 1000);
       return () => clearInterval(interval);
     }
-  }, [hovered]);
+  }, [hovered, duration, clockwise]); // Dependencias actualizadas
 
   return (
     <Tag
