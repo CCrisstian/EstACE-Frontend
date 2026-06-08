@@ -21,7 +21,7 @@ export default function Footer() {
 
   // 3. Si la ruta SÍ está permitida, renderizamos el Footer normalmente
   return (
-    <footer className="w-full border-t border-neutral-800 bg-black py-8 px-6 mt-auto relative z-50">
+    <footer className="w-full border-t border-neutral-800 bg-black py-2 px-6 mt-auto relative z-50">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
         
         {/* Info del Autor */}
